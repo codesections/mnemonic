@@ -1,167 +1,135 @@
-use clap::{crate_authors, crate_version, App, Arg, ArgGroup, SubCommand};
+mod cli;
+use colored::*;
 use directories::ProjectDirs;
+use open;
 use prettyprint::*;
-use std::process;
+use std::io::Write;
+use std::{env, fs, io, path, process};
 
 fn main() {
-    let CliText {
-        app,
-        edit,
-        list,
-        new,
-        push,
-        rm,
-        theme,
-    } = CliText::new();
-    let matches = App::new(app.name)
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(app.description)
-        .arg(
-            Arg::with_name("MNEMONIC")
-                .help("the mnemonic to display")
-                .index(1)
-                .conflicts_with("list")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name(new.name)
-                .help(new.help)
-                .long(new.long)
-                .short(new.short),
-        )
-        .arg(
-            Arg::with_name(push.name)
-                .help(push.help)
-                .long(push.long)
-                .short(push.short),
-        )
-        .arg(
-            Arg::with_name(list.name)
-                .help(list.help)
-                .long(list.long)
-                .short(list.short),
-        )
-        .arg(
-            Arg::with_name(rm.name)
-                .help(rm.help)
-                .long(rm.long)
-                .short(rm.short),
-        )
-        .arg(
-            Arg::with_name(theme.name)
-                .help(theme.help)
-                .long(theme.long)
-                .short(theme.short)
-                .takes_value(true)
-                .value_name(theme.value_name),
-        )
-        .arg(
-            Arg::with_name(edit.name)
-                .help(edit.help)
-                .long(edit.long)
-                .short(edit.short),
-        )
-        .get_matches();
+    let cli_args = cli::build_cli().get_matches();
+    let data_dir = ProjectDirs::from("", "", "mn").unwrap();
+    let data_dir = data_dir.data_local_dir().to_str().unwrap();
+    if let Some(in_file) = cli_args.value_of("MNEMONIC") {
+        let file = format!("{}/{}.md", data_dir, in_file);
+        if cli_args.is_present("edit") {
+            if path::Path::new(&file).exists() {
+                if let Some(editor) = env::var_os("VISUAL") {
+                    process::Command::new(editor).arg(&file).status().unwrap();
+                } else if let Some(editor) = env::var_os("EDITOR") {
+                    process::Command::new(editor).arg(&file).status().unwrap();
+                } else {
+                    open::that(&file).is_ok();
+                }
+            } else {
+                eprintln!(
+                    "{} not found.  Would you like to add it to Mnemonic?",
+                    in_file.yellow().bold()
+                );
+                process::exit(1);
+            }
+        } else if cli_args.is_present("new") {
+            if !path::Path::new(&file).exists() {
+                if let Some(editor) = env::var_os("VISUAL") {
+                    process::Command::new(editor).arg(file).status().unwrap();
+                } else if let Some(editor) = env::var_os("EDITOR") {
+                    process::Command::new(editor).arg(file).status().unwrap();
+                } else {
+                    open::that(file).is_ok();
+                }
+            } else {
+                eprintln!(
+                    "{} already exists.  Did you mean to edit it instead?",
+                    in_file.yellow().bold()
+                );
+                process::exit(1);
+            }
+        } else if cli_args.is_present("rm") {
+            println!(
+                "Are you sure you want to delete {}? [y/n]",
+                in_file.yellow().bold()
+            );
+            let mut answer = String::new();
+            io::stdin().read_line(&mut answer).unwrap();
+            loop {
+                match &answer[..] {
+                    "y\n" | "yes\n" => {
+                        fs::remove_file(file).unwrap_or_else(|e| {
+                            eprintln!(
+                                "There was an error deleting {}:\n{}",
+                                in_file.yellow().bold(),
+                                e
+                            );
+                            process::exit(2);
+                        });
+                        println!("{} has been deleted.", in_file.blue());
+                        break;
+                    }
+                    "n\n" | "no\n" => {
+                        break;
+                    }
+                    _ => {
+                        println!("Please type 'yes' ('y') or 'no' ('n')");
 
-    if let Some(in_file) = matches.value_of("input") {
-        let printer = PrettyPrinter::default()
-            .header(false)
-            .grid(false)
-            .language("md")
-            .theme("TwoDark")
-            .line_numbers(false)
-            .build()
-            .unwrap();
+                        io::stdin().read_line(&mut answer).unwrap();
+                    }
+                }
+            }
+        } else if cli_args.is_present("push") {
+            let mut mnemonic_file = fs::OpenOptions::new()
+                .append(true)
+                .open(file)
+                .unwrap_or_else(|_| {
+                    eprintln!(
+                        "{} not found.  Would you like to add it to Mnemonic?",
+                        in_file.yellow().bold()
+                    );
+                    process::exit(1);
+                });
 
-        if let Some(proj_dir) = ProjectDirs::from("", "", "mn") {
-            let data_dir = proj_dir.data_local_dir().to_str().unwrap();
-            let file = format!("{}/{}", data_dir, in_file);
+            let new_line = cli_args.value_of("push").unwrap();
+            mnemonic_file
+                .write(format!("\n{}", new_line).as_bytes())
+                .unwrap();
+        } else {
+            let theme = cli_args.value_of("theme").unwrap_or("TwoDark");
+            let printer = PrettyPrinter::default()
+                .header(false)
+                .grid(false)
+                .language("md")
+                .theme(theme)
+                .line_numbers(false)
+                .build()
+                .unwrap();
 
             printer.file(file).unwrap_or_else(|_| {
                 eprintln!(
                     "{} not found.  Would you like to add it to Mnemonic?",
-                    in_file
+                    in_file.yellow().bold()
                 );
                 process::exit(1);
             });
         }
-    }
-}
+    } else if cli_args.is_present("list") {
+        let mut file_list = vec![];
+        for file in fs::read_dir(data_dir).unwrap() {
+            file_list.push(format!(
+                "  - {}",
+                file.unwrap()
+                    .path()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .blue()
+                    .bold()
+            ));
+        }
 
-pub struct ArgValues {
-    pub name: &'static str,
-    pub long: &'static str,
-    pub short: &'static str,
-    pub help: &'static str,
-}
-pub struct OptValues {
-    pub name: &'static str,
-    pub long: &'static str,
-    pub short: &'static str,
-    pub help: &'static str,
-    pub value_name: &'static str,
-    pub default_value: &'static str,
-}
-pub struct HeaderInfo {
-    pub name: &'static str,
-    pub description: &'static str,
-}
-pub struct CliText {
-    pub app: HeaderInfo,
-    pub list: ArgValues,
-    pub new: ArgValues,
-    pub edit: ArgValues,
-    pub rm: ArgValues,
-    pub push: ArgValues,
-    pub theme: OptValues,
-}
-
-impl CliText {
-    pub fn new() -> CliText {
-        CliText {
-            app: HeaderInfo {
-                name: "mnemonic",
-                description: "Remembering those little things that slip your mind",
-            },
-            list: ArgValues {
-                name: "list",
-                long: "--list",
-                short: "-l",
-                help: "lists all existing mnemonics [UNIMPLEMENTED]",
-            },
-            new: ArgValues {
-                name: "new",
-                long: "--new",
-                short: "-n",
-                help: "adds a new mnemonic [UNIMPLEMENTED]",
-            },
-            edit: ArgValues {
-                name: "edit",
-                long: "--edit",
-                short: "-e",
-                help: "edits the provided mnemonic [UNIMPLEMENTED]",
-            },
-            rm: ArgValues {
-                name: "rm",
-                long: "--rm",
-                short: "-r",
-                help: "deletes a mnemonic [UNIMPLEMENTED]",
-            },
-            push: ArgValues {
-                name: "push",
-                long: "--push",
-                short: "-p",
-                help: "pushes a new line to the provided mnemonic [UNIMPLEMENTED]",
-            },
-            theme: OptValues {
-                name: "theme",
-                long: "--theme",
-                short: "-t",
-                help: "sets a color scheme for the displayed mnemonic [UNIMPLEMENTED]",
-                value_name: "COLOR_SCHEME",
-                default_value: "",
-            },
+        println!("Your {} available mnemonics are:", file_list.len());
+        file_list.sort();
+        for line in file_list {
+            println!("{}", line);
         }
     }
 }
