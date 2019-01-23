@@ -16,5 +16,5 @@ open = "1.2.2"
 
 [build-dependencies]
 clap = "2.23"
-man = { git = "https://github.com/rust-clique/man" }
+man = "0.3.0"
 colored = "1.7.0"
