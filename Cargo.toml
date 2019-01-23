@@ -1,5 +1,10 @@
 [package]
 build = "build.rs"
+description = "The CLI app for remembering those little things that slip your mind"
+license = "MIT"
+keywords = ["CLI", "notes", "productivity", "minimalist", "syntax-highlighting"]
+readme = "./README.md"
+categories = ["command-line-utilities"]
 name = "mn"
 version = "0.1.0"
 authors = ["Daniel Sockwell <daniel@codesections.com>"]
@@ -17,4 +22,3 @@ open = "1.2.2"
 [build-dependencies]
 clap = "2.23"
 man = "0.3.0"
-colored = "1.7.0"
