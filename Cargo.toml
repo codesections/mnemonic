@@ -6,15 +6,13 @@ keywords = ["CLI", "notes", "productivity", "minimalist", "syntax-highlighting"]
 readme = "./README.md"
 categories = ["command-line-utilities"]
 name = "mn"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel Sockwell <daniel@codesections.com>"]
 edition = "2018"
 
 [dependencies]
-bat = "0.9.0"
 prettyprint = "0.3.0"
 clap = "2.32.0"
-app_dirs = "1.2.1"
 directories = "1.0.2"
 colored = "1.7.0"
 open = "1.2.2"
