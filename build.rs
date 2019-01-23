@@ -1,5 +1,6 @@
 use clap::Shell;
 use man::prelude::*;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -7,6 +8,7 @@ include!("src/cli.rs");
 
 fn main() {
     let mut app = build_cli();
+    let mut out_dir = env::var("OUT_DIR").unwrap();
     for shell in [
         Shell::Bash,
         Shell::Elvish,
@@ -16,7 +18,7 @@ fn main() {
     ]
     .into_iter()
     {
-        app.gen_completions("mn", *shell, &".");
+        app.gen_completions("mn", *shell, &out_dir)
     }
 
     let CliText {
@@ -82,7 +84,8 @@ fn main() {
         );
     }
     let msg = msg.render();
-    let mut file = File::create("mn.1").expect("Should be able to open file in project directory");
+    out_dir.push_str("/mn.1");
+    let mut file = File::create(out_dir).expect("Should be able to open file in project directory");
     file.write_all(msg.as_bytes())
         .expect("Should be able to write to file in project directory");
 }
