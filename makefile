@@ -1,4 +1,4 @@
-OUT_DIR := $(shell find -type d -name out | grep mn)
+OUT_DIR := $(shell find -path "./target/release/build/mn-*/out" )
 
 .PHONY : install
 install : 
