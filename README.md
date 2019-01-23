@@ -39,5 +39,5 @@ fn main() {
 
 ```
 
-The syntax highlighting theme is user-configurable with the same themes used in [Bat](https://github.com/sharkdp/bat)
+The syntax highlighting theme is user-configurable with the same themes used in [Bat](https://github.com/sharkdp/bat), which was a major inspiration for this project.
 
