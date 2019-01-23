@@ -1,7 +1,8 @@
 [package]
+build = "build.rs"
 name = "mn"
 version = "0.1.0"
-authors = ["Daniel Sockwell <dsockwell@gmail.com>"]
+authors = ["Daniel Sockwell <daniel@codesections.com>"]
 edition = "2018"
 
 [dependencies]
@@ -12,3 +13,8 @@ app_dirs = "1.2.1"
 directories = "1.0.2"
 colored = "1.7.0"
 open = "1.2.2"
+
+[build-dependencies]
+clap = "2.23"
+man = { git = "https://github.com/rust-clique/man" }
+colored = "1.7.0"

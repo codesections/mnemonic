@@ -1,0 +1,49 @@
+#compdef mn
+
+autoload -U is-at-least
+
+_mn() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'-p+[Pushes a new line to the provided mnemonic]' \
+'--push=[Pushes a new line to the provided mnemonic]' \
+'-t+[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'--theme=[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'-a[Adds a new, blank mnemonic without opening it for editing]' \
+'--add[Adds a new, blank mnemonic without opening it for editing]' \
+'-n[Adds a new mnemonic and opens it in your editor]' \
+'--new[Adds a new mnemonic and opens it in your editor]' \
+'-l[Lists all existing mnemonics]' \
+'--list[Lists all existing mnemonics]' \
+'-r[Deletes a mnemonic]' \
+'--rm[Deletes a mnemonic]' \
+'-e[Edits the provided mnemonic]' \
+'--edit[Edits the provided mnemonic]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':MNEMONIC -- the mnemonic to display:_files' \
+&& ret=0
+    
+}
+
+(( $+functions[_mn_commands] )) ||
+_mn_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn commands' commands "$@"
+}
+
+_mn "$@"

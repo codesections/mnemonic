@@ -44,6 +44,17 @@ fn main() {
                 );
                 process::exit(1);
             }
+        } else if cli_args.is_present("add") {
+            if !path::Path::new(&file).exists() {
+                fs::File::create(&file).unwrap();
+                eprintln!("{} created.", in_file.blue());
+            } else {
+                eprintln!(
+                    "{} already exists.  Did you mean to edit it instead?",
+                    in_file.yellow().bold()
+                );
+                process::exit(1);
+            }
         } else if cli_args.is_present("rm") {
             println!(
                 "Are you sure you want to delete {}? [y/n]",
