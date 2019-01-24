@@ -76,7 +76,7 @@ fn create_new_mnemonic(file_path: &String, file_name: &str) {
                 .arg(file_path)
                 .status()
                 .unwrap_or_else(|_| {
-                    thread::sleep(time::Duration::from_millis(16));
+                    thread::sleep(time::Duration::from_millis(160));
                     process::Command::new(&editor)
                         .arg(file_path)
                         .status()
@@ -87,15 +87,15 @@ fn create_new_mnemonic(file_path: &String, file_name: &str) {
                 .arg(file_path)
                 .status()
                 .unwrap_or_else(|_| {
-                    thread::sleep(time::Duration::from_millis(16));
+                    thread::sleep(time::Duration::from_millis(160));
                     process::Command::new(&editor)
                         .arg(file_path)
                         .status()
-                        .expect("should be able to open file with $VISUAL")
+                        .expect("should be able to open file with $EDITOR")
                 });
         } else {
             if open::that(file_path).is_err() {
-                thread::sleep(time::Duration::from_millis(16));
+                thread::sleep(time::Duration::from_millis(160));
                 if open::that(file_path).is_err() {
                     eprintln!(
                         "Could not open {}.  Do you have read and write access to {}?",
