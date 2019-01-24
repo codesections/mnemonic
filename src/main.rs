@@ -14,6 +14,8 @@ fn main() {
         .data_local_dir()
         .to_str()
         .expect("Should be able to find local data directory inside project directory");
+    fs::create_dir_all(data_dir)
+        .expect("should be able to create the data directory if it does not already exist");
     if let Some(usr_supplied_file_name) = cli_args.value_of("MNEMONIC") {
         let full_path = format!("{}/{}.md", data_dir, usr_supplied_file_name);
         if cli_args.is_present("edit") {
@@ -65,17 +67,22 @@ fn edit_mnemonic(file_path: &String, file_name: &str) {
 fn create_new_mnemonic(file_path: &String, file_name: &str) {
     if !path::Path::new(&file_path).exists() {
         if let Some(editor) = env::var_os("VISUAL") {
+            fs::File::create(&file_path)
+                .expect("should be able to create a new file in the local data directory");
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
                 .expect("should be able to open file with $VISUAL");
         } else if let Some(editor) = env::var_os("EDITOR") {
+            fs::File::create(&file_path)
+                .expect("should be able to create a new file in the local data directory");
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
                 .expect("should be able to open file with $EDITOR");
         } else {
-            fs::File::create(&file_path).unwrap();
+            fs::File::create(&file_path)
+                .expect("should be able to create a new file in the local data directory");
             if open::that(file_path).is_err() {
                 eprintln!(
                     "Could not open {}.  Do you have read and write access to {}?",
