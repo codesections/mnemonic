@@ -65,44 +65,29 @@ fn edit_mnemonic(file_path: &String, file_name: &str) {
 }
 
 fn create_new_mnemonic(file_path: &String, file_name: &str) {
-    use std::{thread, time};
     if !path::Path::new(&file_path).exists() {
         let f = fs::File::create(&file_path)
             .expect("should be able to create a new file in the local data directory");
         f.sync_all()
             .expect("should be able to sync newly created file");
+        while !path::Path::new(&file_path).exists() {}
         if let Some(editor) = env::var_os("VISUAL") {
             process::Command::new(&editor)
                 .arg(file_path)
                 .status()
-                .unwrap_or_else(|_| {
-                    thread::sleep(time::Duration::from_millis(160));
-                    process::Command::new(&editor)
-                        .arg(file_path)
-                        .status()
-                        .expect("should be able to open file with $VISUAL")
-                });
+                .expect("should be able to open file with $VISUAL");
         } else if let Some(editor) = env::var_os("EDITOR") {
             process::Command::new(&editor)
                 .arg(file_path)
                 .status()
-                .unwrap_or_else(|_| {
-                    thread::sleep(time::Duration::from_millis(160));
-                    process::Command::new(&editor)
-                        .arg(file_path)
-                        .status()
-                        .expect("should be able to open file with $EDITOR")
-                });
+                .expect("should be able to open file with $EDITOR");
         } else {
             if open::that(file_path).is_err() {
-                thread::sleep(time::Duration::from_millis(160));
-                if open::that(file_path).is_err() {
-                    eprintln!(
-                        "Could not open {}.  Do you have read and write access to {}?",
-                        file_name.yellow().bold(),
-                        file_path.yellow().bold(),
-                    );
-                }
+                eprintln!(
+                    "Could not open {}.  Do you have read and write access to {}?",
+                    file_name.yellow().bold(),
+                    file_path.yellow().bold(),
+                );
             }
         }
     } else {
