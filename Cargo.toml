@@ -6,7 +6,7 @@ keywords = ["CLI", "notes", "productivity", "minimalist", "syntax-highlighting"]
 readme = "./README.md"
 categories = ["command-line-utilities"]
 name = "mn"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Daniel Sockwell <daniel@codesections.com>"]
 edition = "2018"
 
