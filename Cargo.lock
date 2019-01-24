@@ -543,7 +543,7 @@ dependencies = [
 
 [[package]]
 name = "mn"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
