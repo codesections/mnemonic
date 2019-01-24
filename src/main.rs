@@ -8,8 +8,12 @@ use std::{env, fs, io, path, process};
 
 fn main() {
     let cli_args = cli::build_cli().get_matches();
-    let data_dir = ProjectDirs::from("", "", "mn").unwrap();
-    let data_dir = data_dir.data_local_dir().to_str().unwrap();
+    let data_dir =
+        ProjectDirs::from("", "", "mn").expect("Should be able to determine project directory");
+    let data_dir = data_dir
+        .data_local_dir()
+        .to_str()
+        .expect("Should be able to find local data directory inside project directory");
     if let Some(usr_supplied_file_name) = cli_args.value_of("MNEMONIC") {
         let full_path = format!("{}/{}.md", data_dir, usr_supplied_file_name);
         if cli_args.is_present("edit") {
@@ -21,7 +25,9 @@ fn main() {
         } else if cli_args.is_present("rm") {
             delete_mnemonic(&full_path, &usr_supplied_file_name);
         } else if cli_args.is_present("push") {
-            let text_to_append = cli_args.value_of("push").unwrap();
+            let text_to_append = cli_args
+                .value_of("push")
+                .expect("Guaranteed to exist based on `is_present`");
             append_to_mnemonic(&full_path, &usr_supplied_file_name, text_to_append);
         } else {
             let theme = cli_args.value_of("theme").unwrap_or("TwoDark");
@@ -38,12 +44,12 @@ fn edit_mnemonic(file_path: &String, file_name: &str) {
             process::Command::new(editor)
                 .arg(&file_path)
                 .status()
-                .unwrap();
+                .expect("should be able to open file with $VISUAL");
         } else if let Some(editor) = env::var_os("EDITOR") {
             process::Command::new(editor)
                 .arg(&file_path)
                 .status()
-                .unwrap();
+                .expect("should be able to open file with $EDITOR");
         } else {
             open::that(&file_path).is_ok();
         }
@@ -62,14 +68,21 @@ fn create_new_mnemonic(file_path: &String, file_name: &str) {
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
-                .unwrap();
+                .expect("should be able to open file with $VISUAL");
         } else if let Some(editor) = env::var_os("EDITOR") {
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
-                .unwrap();
+                .expect("should be able to open file with $EDITOR");
         } else {
-            open::that(file_path).is_ok();
+            fs::File::create(&file_path).unwrap();
+            if open::that(file_path).is_err() {
+                eprintln!(
+                    "Could not open {}.  Do you have read and write access to {}?",
+                    file_name.yellow().bold(),
+                    file_path.yellow().bold(),
+                );
+            }
         }
     } else {
         eprintln!(
@@ -99,7 +112,9 @@ fn delete_mnemonic(file_path: &String, file_name: &str) {
         file_name.yellow().bold()
     );
     let mut answer = String::new();
-    io::stdin().read_line(&mut answer).unwrap();
+    io::stdin()
+        .read_line(&mut answer)
+        .expect("Should be able to read input from stdin");
     loop {
         match &answer[..] {
             "y\n" | "yes\n" => {
@@ -120,7 +135,9 @@ fn delete_mnemonic(file_path: &String, file_name: &str) {
             _ => {
                 println!("Please type 'yes' ('y') or 'no' ('n')");
 
-                io::stdin().read_line(&mut answer).unwrap();
+                io::stdin()
+                    .read_line(&mut answer)
+                    .expect("Should be able to read input from stdin");
             }
         }
     }
@@ -140,7 +157,7 @@ fn append_to_mnemonic(file_path: &String, file_name: &str, text_to_append: &str)
 
     mnemonic_file
         .write(format!("\n{}", text_to_append).as_bytes())
-        .unwrap();
+        .expect("Should be able to write to mnemonic file");
 }
 
 fn print_mnemonic(file_path: String, file_name: &str, theme: &str) {
@@ -151,7 +168,7 @@ fn print_mnemonic(file_path: String, file_name: &str, theme: &str) {
         .theme(theme)
         .line_numbers(false)
         .build()
-        .unwrap();
+        .expect("should be able to build a formater");
 
     printer.file(file_path).unwrap_or_else(|_| {
         eprintln!(
@@ -164,15 +181,15 @@ fn print_mnemonic(file_path: String, file_name: &str, theme: &str) {
 
 fn list_mnemonics(data_dir: &str) {
     let mut file_list = vec![];
-    for file in fs::read_dir(data_dir).unwrap() {
+    for file in fs::read_dir(data_dir).expect("Should be able to read the local data directory") {
         file_list.push(format!(
             "  - {}",
-            file.unwrap()
+            file.expect("file should exist")
                 .path()
                 .file_stem()
-                .unwrap()
+                .expect("file should have valid stem")
                 .to_str()
-                .unwrap()
+                .expect("file should be able to be converted to a string")
                 .blue()
                 .bold()
         ));
