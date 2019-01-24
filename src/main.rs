@@ -65,37 +65,44 @@ fn edit_mnemonic(file_path: &String, file_name: &str) {
 }
 
 fn create_new_mnemonic(file_path: &String, file_name: &str) {
+    use std::{thread, time};
     if !path::Path::new(&file_path).exists() {
+        let f = fs::File::create(&file_path)
+            .expect("should be able to create a new file in the local data directory");
+        f.sync_all()
+            .expect("should be able to sync newly created file");
         if let Some(editor) = env::var_os("VISUAL") {
-            let f = fs::File::create(&file_path)
-                .expect("should be able to create a new file in the local data directory");
-            f.sync_all()
-                .expect("should be able to sync newly created file");
-            process::Command::new(editor)
+            process::Command::new(&editor)
                 .arg(file_path)
                 .status()
-                .expect("should be able to open file with $VISUAL");
+                .unwrap_or_else(|_| {
+                    thread::sleep(time::Duration::from_millis(16));
+                    process::Command::new(&editor)
+                        .arg(file_path)
+                        .status()
+                        .expect("should be able to open file with $VISUAL")
+                });
         } else if let Some(editor) = env::var_os("EDITOR") {
-            let f = fs::File::create(&file_path)
-                .expect("should be able to create a new file in the local data directory");
-            f.sync_all()
-                .expect("should be able to sync newly created file");
-            dbg!(&file_path);
-            process::Command::new(editor)
+            process::Command::new(&editor)
                 .arg(file_path)
                 .status()
-                .expect("should be able to open file with $EDITOR");
+                .unwrap_or_else(|_| {
+                    thread::sleep(time::Duration::from_millis(16));
+                    process::Command::new(&editor)
+                        .arg(file_path)
+                        .status()
+                        .expect("should be able to open file with $VISUAL")
+                });
         } else {
-            let f = fs::File::create(&file_path)
-                .expect("should be able to create a new file in the local data directory");
-            f.sync_all()
-                .expect("should be able to sync newly created file");
             if open::that(file_path).is_err() {
-                eprintln!(
-                    "Could not open {}.  Do you have read and write access to {}?",
-                    file_name.yellow().bold(),
-                    file_path.yellow().bold(),
-                );
+                thread::sleep(time::Duration::from_millis(16));
+                if open::that(file_path).is_err() {
+                    eprintln!(
+                        "Could not open {}.  Do you have read and write access to {}?",
+                        file_name.yellow().bold(),
+                        file_path.yellow().bold(),
+                    );
+                }
             }
         }
     } else {
