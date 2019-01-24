@@ -10,47 +10,57 @@ pub fn build_cli() -> App<'static, 'static> {
         theme,
         ..
     } = CliText::new();
-    let mut app = App::new(app.name)
+    App::new(app.name)
         .version(crate_version!())
         .author(crate_authors!())
         .about(app.description)
-        .arg(
-            Arg::with_name("MNEMONIC")
-                .help("the mnemonic to display")
-                .index(1)
-                .conflicts_with("add")
-                .index(1)
-                .global(true),
-        );
-
-    for arg in [list].iter() {
-        app = app.subcommand(SubCommand::with_name(arg.name).about(arg.help));
-    }
-    app = app
         .subcommand(
-            SubCommand::with_name(rm.name).about(rm.help).arg(
-                Arg::with_name("force")
-                    .help("deletes the mnemonic without prompting for confirmation")
-                    .long("--force")
-                    .short("-f"),
-            ),
+            SubCommand::with_name(add.name)
+                .about(add.help)
+                .arg(
+                    Arg::with_name("blank")
+                        .help("create a blank mnemonic without opening it in your editor")
+                        .long("--blank")
+                        .short("-b"),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to add")
+                        .required(true),
+                ),
+        )
+        .subcommand(SubCommand::with_name(list.name).about(list.help))
+        .subcommand(
+            SubCommand::with_name(edit.name)
+                .about(edit.help)
+                .arg(
+                    Arg::with_name("push")
+                        .help(push.help)
+                        .long(push.long)
+                        .short(push.short)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to edit")
+                        .required(true),
+                ),
         )
         .subcommand(
-            SubCommand::with_name(add.name).about(add.help).arg(
-                Arg::with_name("blank")
-                    .help("create a blank mnemonic without opening it in your editor")
-                    .long("--blank")
-                    .short("-b"),
-            ),
-        )
-        .subcommand(
-            SubCommand::with_name(edit.name).about(edit.help).arg(
-                Arg::with_name("push")
-                    .help(push.help)
-                    .long(push.long)
-                    .short(push.short)
-                    .takes_value(true),
-            ),
+            SubCommand::with_name(rm.name)
+                .about(rm.help)
+                .arg(
+                    Arg::with_name("force")
+                        .help("deletes the mnemonic without prompting for confirmation")
+                        .long("--force")
+                        .short("-f"),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The mnemonic or mnemonics to delete")
+                        .multiple(true)
+                        .required(true),
+                ),
         )
         .subcommand(
             SubCommand::with_name("show")
@@ -62,9 +72,14 @@ pub fn build_cli() -> App<'static, 'static> {
                         .short(theme.short)
                         .takes_value(true)
                         .possible_values(&theme.possible_values.expect("Set these ourself")),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to print to the console")
+                        .required(true),
                 ),
-        );
-    app
+        )
+        .arg(Arg::with_name("MNEMONIC").help("the mnemonic to display"))
 }
 
 pub struct ArgValues {
