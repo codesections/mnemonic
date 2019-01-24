@@ -140,7 +140,7 @@ fn delete_mnemonic(file_path: &String, file_name: &str) {
             }
             _ => {
                 println!("Please type 'yes' ('y') or 'no' ('n')");
-
+                answer = String::new();
                 io::stdin()
                     .read_line(&mut answer)
                     .expect("Should be able to read input from stdin");
