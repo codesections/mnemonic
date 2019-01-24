@@ -1,11 +1,10 @@
-use clap::{crate_authors, crate_version, App, Arg};
+use clap::{crate_authors, crate_version, App, Arg, SubCommand};
 pub fn build_cli() -> App<'static, 'static> {
     let CliText {
         app,
         add,
         edit,
         list,
-        new,
         push,
         rm,
         theme,
@@ -19,32 +18,52 @@ pub fn build_cli() -> App<'static, 'static> {
             Arg::with_name("MNEMONIC")
                 .help("the mnemonic to display")
                 .index(1)
-                .conflicts_with("list")
-                .required(true)
-                .index(1),
+                .conflicts_with("add")
+                .index(1)
+                .global(true),
         );
 
-    for arg in [add, new, list, rm, edit].iter() {
-        app = app.arg(
-            Arg::with_name(arg.name)
-                .help(arg.help)
-                .long(arg.long)
-                .short(arg.short),
+    for arg in [list].iter() {
+        app = app.subcommand(SubCommand::with_name(arg.name).about(arg.help));
+    }
+    app = app
+        .subcommand(
+            SubCommand::with_name(rm.name).about(rm.help).arg(
+                Arg::with_name("force")
+                    .help("deletes the mnemonic without prompting for confirmation")
+                    .long("--force")
+                    .short("-f"),
+            ),
+        )
+        .subcommand(
+            SubCommand::with_name(add.name).about(add.help).arg(
+                Arg::with_name("blank")
+                    .help("create a blank mnemonic without opening it in your editor")
+                    .long("--blank")
+                    .short("-b"),
+            ),
+        )
+        .subcommand(
+            SubCommand::with_name(edit.name).about(edit.help).arg(
+                Arg::with_name("push")
+                    .help(push.help)
+                    .long(push.long)
+                    .short(push.short)
+                    .takes_value(true),
+            ),
+        )
+        .subcommand(
+            SubCommand::with_name("show")
+                .about("show the provided mnemonic [DEFAULT]")
+                .arg(
+                    Arg::with_name(theme.name)
+                        .help(theme.help)
+                        .long(theme.long)
+                        .short(theme.short)
+                        .takes_value(true)
+                        .possible_values(&theme.possible_values.expect("Set these ourself")),
+                ),
         );
-    }
-    for opt in [push, theme].iter() {
-        let mut arg = Arg::with_name(opt.name)
-            .help(opt.help)
-            .long(opt.long)
-            .short(opt.short)
-            .takes_value(true)
-            .value_name(opt.value_name);
-
-        if let Some(possible_values) = &opt.possible_values {
-            arg = arg.possible_values(&possible_values);
-        }
-        app = app.arg(arg)
-    }
     app
 }
 
