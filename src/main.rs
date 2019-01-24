@@ -180,8 +180,18 @@ fn list(data_dir: &str) {
 }
 
 fn show(show_args: &ArgMatches, data_dir: &str) {
+    use std::io::prelude::*;
     if let Some(usr_supplied_file_name) = show_args.value_of("MNEMONIC") {
         let full_path = format!("{}/{}.md", &data_dir, usr_supplied_file_name);
+        if show_args.is_present("plaintext") {
+            let mut file = fs::File::open(&full_path).expect("should be able to open mnemonic");
+            let mut plaintext = String::new();
+            file.read_to_string(&mut plaintext)
+                .expect("should be able to read open file to string");
+
+            println!("{}", plaintext);
+            process::exit(0);
+        }
         let theme = show_args.value_of("theme").unwrap_or("TwoDark");
         let syntax_language = show_args.value_of("syntax").unwrap_or("md");
         let printer = PrettyPrinter::default()

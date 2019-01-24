@@ -29,7 +29,6 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 ),
         )
-        .subcommand(SubCommand::with_name(list.name).about(list.help))
         .subcommand(
             SubCommand::with_name(edit.name)
                 .about(edit.help)
@@ -46,6 +45,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 ),
         )
+        .subcommand(SubCommand::with_name(list.name).about(list.help))
         .subcommand(
             SubCommand::with_name(rm.name)
                 .about(rm.help)
@@ -72,6 +72,20 @@ pub fn build_cli() -> App<'static, 'static> {
                         .short(theme.short)
                         .takes_value(true)
                         .possible_values(&theme.possible_values.expect("Set these ourself")),
+                )
+                .arg(
+                    Arg::with_name("plaintext")
+                        .help("Print the mnemonic with no syntax highlighting at all.")
+                        .long("--plaintext")
+                        .short("-p")
+                        .conflicts_with("syntax"),
+                )
+                .arg(
+                    Arg::with_name("syntax")
+                        .help("The language syntax used for highlighting the output. [Default: md]")
+                        .long("--syntax")
+                        .short("-s")
+                        .takes_value(true),
                 )
                 .arg(
                     Arg::with_name("MNEMONIC")
