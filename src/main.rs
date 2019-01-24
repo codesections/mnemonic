@@ -67,22 +67,29 @@ fn edit_mnemonic(file_path: &String, file_name: &str) {
 fn create_new_mnemonic(file_path: &String, file_name: &str) {
     if !path::Path::new(&file_path).exists() {
         if let Some(editor) = env::var_os("VISUAL") {
-            fs::File::create(&file_path)
+            let f = fs::File::create(&file_path)
                 .expect("should be able to create a new file in the local data directory");
+            f.sync_all()
+                .expect("should be able to sync newly created file");
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
                 .expect("should be able to open file with $VISUAL");
         } else if let Some(editor) = env::var_os("EDITOR") {
-            fs::File::create(&file_path)
+            let f = fs::File::create(&file_path)
                 .expect("should be able to create a new file in the local data directory");
+            f.sync_all()
+                .expect("should be able to sync newly created file");
+            dbg!(&file_path);
             process::Command::new(editor)
                 .arg(file_path)
                 .status()
                 .expect("should be able to open file with $EDITOR");
         } else {
-            fs::File::create(&file_path)
+            let f = fs::File::create(&file_path)
                 .expect("should be able to create a new file in the local data directory");
+            f.sync_all()
+                .expect("should be able to sync newly created file");
             if open::that(file_path).is_err() {
                 eprintln!(
                     "Could not open {}.  Do you have read and write access to {}?",
