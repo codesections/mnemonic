@@ -19,9 +19,11 @@ Optionally, clone the git repository and run `sudo make install` to install the 
 -->
 
 ## Usage
-Run `mn --help` for full usage details.  The basic commands are `mn <MNEMONIC>`, which shows a previously created mnemonic; `mn --list`, which lists all existing mnemonics, `mn --new <MNEMONIC>`, which creates a new mnemonic using your `$EDITOR`, and `mn --edit <MNEMONIC>`, which edits an exiting mnemonic.
+Run `mn --help` for full usage details.  The basic commands are `mn <MNEMONIC>`, which shows a previously created mnemonic; `mn list`, which lists all existing mnemonics, `mn add <MNEMONIC>`, which creates a new mnemonic using your `$EDITOR`, and `mn edit <MNEMONIC>`, which edits an exiting mnemonic.
 
-You can also use `mn <MNEMONIC> --push "<TEXT>"` to push text to a mnemonic without opening it in your editor.
+Each of these sub-commands takes various options as well.  For example, you can also use `mn add <MNEMONIC> --push "<TEXT>"` to push text to a mnemonic without opening it in your editor or `mn show <MNEMONIC> --syntax "yaml"` to display a mnemonic with YAML syntax highlighting.
+
+Consult the `help` command for full details.
 
 ## Syntax highlighting
 Mnemonic highlights all output as Markdown.  If you wish a portion of text to be highlighted as a different language, you can use GitHub-style code-fences.  For example,
