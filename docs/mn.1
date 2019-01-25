@@ -1,0 +1,97 @@
+.TH MNEMONIC 1
+.SH NAME
+mnemonic \- Remembering those little things that slip your mind
+.SH SYNOPSIS
+\fBmnemonic\fR [FLAGS] [OPTIONS]
+.SH FLAGS
+.TP
+\fB\-a\fR, \fB\-\-add\fR
+Adds a new, blank mnemonic without opening it for editing
+
+.TP
+\fB\-e\fR, \fB\-\-edit\fR
+Edits the provided mnemonic
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints the help information
+
+.TP
+\fB\-l\fR, \fB\-\-list\fR
+Lists all existing mnemonics
+
+.TP
+\fB\-n\fR, \fB\-\-new\fR
+Adds a new mnemonic and opens it in your editor
+
+.TP
+\fB\-r\fR, \fB\-\-rm\fR
+Deletes a mnemonic
+
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Prints version information.
+.SH OPTIONS
+.TP
+\fB\-p\fR, \fB\-\-push\fR=\fINEW_TEXT\fR
+Pushes a new line to the provided mnemonic
+
+.TP
+\fB\-t\fR, \fB\-\-theme\fR=\fICOLOR_SCHEME\fR
+Sets a color scheme for the displayed mnemonic 
+.nf
+.B     Possible values: 
+    1337
+    DarkNeon
+    GitHub
+    Monokai Extended
+    Monokai Extended Bright
+    Monokai Extended Light
+    Monokai Extended Origin
+    OneHalfDark
+    OneHalfLight
+    Sublime Snazzy
+    TwoDark
+    zenburn
+.fi
+It is currently not possible to customize the theme beyond these presets, but it is an issue under consideration.
+.SH SYNTAX HIGHLIGHTING
+By default, mnemonic will highlight all text as Markdown.  If you would like to highlight a portion of a mnemonic based on different rules, you can specify the language with GitHub\-style triple backticks.  For example, to highlight Rust code:
+
+.nf
+```rust
+let foo = "bar";
+```
+.fi
+
+
+.SH EXIT STATUS
+.TP
+\fB0\fR
+Successful program execution.
+
+.TP
+\fB1\fR
+Unsuccessful program execution.
+
+.TP
+\fB101\fR
+The program panicked.
+.SH EXAMPLES
+.TP
+Add a new mnemonic with the name 'notes':
+\fB$ mn \-\-add notes\fR
+.TP
+Add an item to 'notes' without opening it in your editor:
+.nf
+\fB$ mn notes \-\-push "# Jokes
+There are two hard problems in computer science: cache invalidation, naming things, and off\-by\-one errors"\fR
+.TP
+Print the mnemonic 'notes' in your terminal:
+\fB$ mn notes\fR
+
+.SH AUTHOR
+.P
+.RS 2
+.nf
+Daniel Sockwell <daniel@codesections.com>

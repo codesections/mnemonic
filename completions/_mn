@@ -1,0 +1,158 @@
+#compdef mn
+
+autoload -U is-at-least
+
+_mn() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'-p[Print the mnemonic with no syntax highlighting at all.]' \
+'--plaintext[Print the mnemonic with no syntax highlighting at all.]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+'::MNEMONIC -- the mnemonic to display:_files' \
+":: :_mn_commands" \
+"*::: :->mnemonic" \
+&& ret=0
+    case $state in
+    (mnemonic)
+        words=($line[2] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:mn-command-$line[2]:"
+        case $line[2] in
+            (add)
+_arguments "${_arguments_options[@]}" \
+'-b[create a blank mnemonic without opening it in your editor]' \
+'--blank[create a blank mnemonic without opening it in your editor]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':MNEMONIC -- The name of the mnemonic to add:_files' \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" \
+'-p+[Pushes a new line to the provided mnemonic]' \
+'--push=[Pushes a new line to the provided mnemonic]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':MNEMONIC -- The name of the mnemonic to edit:_files' \
+&& ret=0
+;;
+(list)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(rm)
+_arguments "${_arguments_options[@]}" \
+'-f[deletes the mnemonic without prompting for confirmation]' \
+'--force[deletes the mnemonic without prompting for confirmation]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':MNEMONIC -- The mnemonic or mnemonics to delete:_files' \
+&& ret=0
+;;
+(show)
+_arguments "${_arguments_options[@]}" \
+'-t+[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'--theme=[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'-s+[The language syntax used for highlighting the output. \[Default: md\]]' \
+'--syntax=[The language syntax used for highlighting the output. \[Default: md\]]' \
+'(-s --syntax)-p[Print the mnemonic with no syntax highlighting at all.]' \
+'(-s --syntax)--plaintext[Print the mnemonic with no syntax highlighting at all.]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':MNEMONIC -- The name of the mnemonic to print to the console:_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_mn_commands] )) ||
+_mn_commands() {
+    local commands; commands=(
+        "add:Adds a new, blank mnemonic without opening it for editing" \
+"edit:Edits the provided mnemonic" \
+"list:Lists all existing mnemonics" \
+"rm:Deletes a mnemonic" \
+"show:show the provided mnemonic \[DEFAULT\]" \
+"help:Prints this message or the help of the given subcommand(s)" \
+    )
+    _describe -t commands 'mn commands' commands "$@"
+}
+(( $+functions[_mn__add_commands] )) ||
+_mn__add_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn add commands' commands "$@"
+}
+(( $+functions[_mn__edit_commands] )) ||
+_mn__edit_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn edit commands' commands "$@"
+}
+(( $+functions[_mn__help_commands] )) ||
+_mn__help_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn help commands' commands "$@"
+}
+(( $+functions[_mn__list_commands] )) ||
+_mn__list_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn list commands' commands "$@"
+}
+(( $+functions[_mn__rm_commands] )) ||
+_mn__rm_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn rm commands' commands "$@"
+}
+(( $+functions[_mn__show_commands] )) ||
+_mn__show_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'mn show commands' commands "$@"
+}
+
+_mn "$@"
