@@ -1,5 +1,4 @@
 [package]
-build = "build.rs"
 description = "The CLI app for remembering those little things that slip your mind"
 repository = "https://github.com/codesections/mnemonic"
 homepage = "https://github.com/codesections/mnemonic"
@@ -20,6 +19,3 @@ colored = "1.7.0"
 open = "1.2.2"
 man = "0.3.0"
 
-[build-dependencies]
-clap = "2.23"
-man = "0.3.0"

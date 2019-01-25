@@ -1,4 +1,4 @@
-use clap::{crate_authors, crate_version, App, Arg, SubCommand};
+use clap::{crate_authors, crate_version, App, AppSettings, Arg, SubCommand};
 pub fn build_cli() -> App<'static, 'static> {
     let CliText {
         app,
@@ -11,6 +11,7 @@ pub fn build_cli() -> App<'static, 'static> {
         ..
     } = CliText::new();
     App::new(app.name)
+        .setting(AppSettings::SubcommandsNegateReqs)
         .version(crate_version!())
         .author(crate_authors!())
         .about(app.description)
@@ -93,7 +94,11 @@ pub fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 ),
         )
-        .arg(Arg::with_name("MNEMONIC").help("the mnemonic to display"))
+        .arg(
+            Arg::with_name("MNEMONIC")
+                .help("the mnemonic to display")
+                .required(true),
+        )
         .arg(
             Arg::with_name("plaintext")
                 .help("Print the mnemonic with no syntax highlighting at all.")
