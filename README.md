@@ -14,7 +14,7 @@ And thus, **Mnemonic** was born.  Invoke it with the `mn` command to quickly pri
 
 Currently, you have two installation options, both of which require Rust: 
 * Install with `cargo install mn` (installs only the executable itself)
-* Clone the repository, `cd` into it, and run `make install` (installs the executable, the man page and Zsh completions)
+* Clone the repository, `cd` into it, and run `make install` (installs the executable and Zsh completions (man page and completions for additional shells coming soon))
 
 In the future, additional installation instructions will be supported (including through conventional package managers).
 
