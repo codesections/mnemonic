@@ -94,6 +94,13 @@ pub fn build_cli() -> App<'static, 'static> {
                 ),
         )
         .arg(Arg::with_name("MNEMONIC").help("the mnemonic to display"))
+        .arg(
+            Arg::with_name("plaintext")
+                .help("Print the mnemonic with no syntax highlighting at all.")
+                .long("--plaintext")
+                .short("-p")
+                .hidden(true),
+        )
 }
 
 pub struct ArgValues {
