@@ -12,7 +12,11 @@ And thus, **Mnemonic** was born.  Invoke it with the `mn` command to quickly pri
 
 ## Installation 
 
-Install with `cargo install mn`.  Optionally, clone the git repository and run `sudo make install` to install the `man` page and the Zsh completions.  The git repository also contains generated completions for Bash, Fish, and Elvish; if you use any of those shells, you can install the completions in the appropriate way for your shell.
+Install with `cargo install mn`. 
+
+<!--
+Optionally, clone the git repository and run `sudo make install` to install the `man` page and the Zsh completions.  The git repository also contains generated completions for Bash, Fish, and Elvish; if you use any of those shells, you can install the completions in the appropriate way for your shell.
+-->
 
 ## Usage
 Run `mn --help` for full usage details.  The basic commands are `mn <MNEMONIC>`, which shows a previously created mnemonic; `mn --list`, which lists all existing mnemonics, `mn --new <MNEMONIC>`, which creates a new mnemonic using your `$EDITOR`, and `mn --edit <MNEMONIC>`, which edits an exiting mnemonic.

@@ -1,51 +1,106 @@
-use clap::{crate_authors, crate_version, App, Arg};
+use clap::{crate_authors, crate_version, App, Arg, SubCommand};
 pub fn build_cli() -> App<'static, 'static> {
     let CliText {
         app,
         add,
         edit,
         list,
-        new,
         push,
         rm,
         theme,
         ..
     } = CliText::new();
-    let mut app = App::new(app.name)
+    App::new(app.name)
         .version(crate_version!())
         .author(crate_authors!())
         .about(app.description)
+        .subcommand(
+            SubCommand::with_name(add.name)
+                .about(add.help)
+                .arg(
+                    Arg::with_name("blank")
+                        .help("create a blank mnemonic without opening it in your editor")
+                        .long("--blank")
+                        .short("-b"),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to add")
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(edit.name)
+                .about(edit.help)
+                .arg(
+                    Arg::with_name("push")
+                        .help(push.help)
+                        .long(push.long)
+                        .short(push.short)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to edit")
+                        .required(true),
+                ),
+        )
+        .subcommand(SubCommand::with_name(list.name).about(list.help))
+        .subcommand(
+            SubCommand::with_name(rm.name)
+                .about(rm.help)
+                .arg(
+                    Arg::with_name("force")
+                        .help("deletes the mnemonic without prompting for confirmation")
+                        .long("--force")
+                        .short("-f"),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The mnemonic or mnemonics to delete")
+                        .multiple(true)
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("show")
+                .about("show the provided mnemonic [DEFAULT]")
+                .arg(
+                    Arg::with_name(theme.name)
+                        .help(theme.help)
+                        .long(theme.long)
+                        .short(theme.short)
+                        .takes_value(true)
+                        .possible_values(&theme.possible_values.expect("Set these ourself")),
+                )
+                .arg(
+                    Arg::with_name("plaintext")
+                        .help("Print the mnemonic with no syntax highlighting at all.")
+                        .long("--plaintext")
+                        .short("-p")
+                        .conflicts_with("syntax"),
+                )
+                .arg(
+                    Arg::with_name("syntax")
+                        .help("The language syntax used for highlighting the output. [Default: md]")
+                        .long("--syntax")
+                        .short("-s")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("MNEMONIC")
+                        .help("The name of the mnemonic to print to the console")
+                        .required(true),
+                ),
+        )
+        .arg(Arg::with_name("MNEMONIC").help("the mnemonic to display"))
         .arg(
-            Arg::with_name("MNEMONIC")
-                .help("the mnemonic to display")
-                .index(1)
-                .conflicts_with("list")
-                .required(true)
-                .index(1),
-        );
-
-    for arg in [add, new, list, rm, edit].iter() {
-        app = app.arg(
-            Arg::with_name(arg.name)
-                .help(arg.help)
-                .long(arg.long)
-                .short(arg.short),
-        );
-    }
-    for opt in [push, theme].iter() {
-        let mut arg = Arg::with_name(opt.name)
-            .help(opt.help)
-            .long(opt.long)
-            .short(opt.short)
-            .takes_value(true)
-            .value_name(opt.value_name);
-
-        if let Some(possible_values) = &opt.possible_values {
-            arg = arg.possible_values(&possible_values);
-        }
-        app = app.arg(arg)
-    }
-    app
+            Arg::with_name("plaintext")
+                .help("Print the mnemonic with no syntax highlighting at all.")
+                .long("--plaintext")
+                .short("-p")
+                .hidden(true),
+        )
 }
 
 pub struct ArgValues {
