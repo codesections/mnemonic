@@ -229,3 +229,6 @@ fn show(show_args: &ArgMatches, data_dir: &str) -> Result<Option<String>, (i32, 
         )),
     }
 }
+
+// TODO: Create Err enum
+// TODO: Create FsState struct and pass it to all fn
