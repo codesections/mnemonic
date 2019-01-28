@@ -20,12 +20,6 @@ pub fn add(
             edit(add_args, &data_dir, fs_state)
         }
     } else {
-        Err(CliErr {
-            code: 1,
-            msg: format!(
-                "{} already exists.  Did you mean to edit it instead?",
-                file_name.yellow().bold()
-            ),
-        })
+        Err(CliErr::MnemonicAlreadyExists(file_name.to_string()))
     }
 }

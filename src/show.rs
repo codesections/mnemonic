@@ -1,7 +1,6 @@
 use crate::err::CliErr;
 use crate::input_state::FsState;
 use clap::ArgMatches;
-use colored::*;
 use prettyprint::*;
 use std::{fs, io::Read};
 
@@ -34,12 +33,6 @@ pub fn show(
             .expect("should be able to print existing file");
         Ok(None)
     } else {
-        Err(CliErr {
-            code: 1,
-            msg: format!(
-                "{} not found.  Would you like to add it to Mnemonic?",
-                usr_supplied_file_name.yellow().bold()
-            ),
-        })
+        Err(CliErr::MnemonicNotFound(usr_supplied_file_name.to_string()))
     }
 }

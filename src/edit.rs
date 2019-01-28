@@ -27,13 +27,7 @@ pub fn edit(
             Ok(None)
         }
     } else {
-        Err(CliErr {
-            code: 1,
-            msg: format!(
-                "{} not found.  Would you like to add it to Mnemonic?",
-                file_name.yellow().bold()
-            ),
-        })
+        Err(CliErr::MnemonicNotFound(file_name.to_string()))
     }
 }
 

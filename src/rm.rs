@@ -14,10 +14,7 @@ pub fn rm(
     for file_name in file_name_arguments {
         let full_path = format!("{}/{}.md", data_dir, file_name);
         if !fs_state.file_exists {
-            return Err(CliErr {
-                code: 1,
-                msg: format!("No mnemonic named {} exists", file_name.yellow().bold()),
-            });
+            return Err(CliErr::MnemonicNotFound(file_name.to_string()));
         }
         if rm_args.is_present("force") {
             let file_deleted_msg = delete_file(full_path, file_name)?;
@@ -57,14 +54,7 @@ pub fn rm(
 fn delete_file(full_path: String, file_name: &str) -> Result<Option<String>, CliErr> {
     // NOTE: state
     match fs::remove_file(full_path) {
-        Err(e) => Err(CliErr {
-            code: 1,
-            msg: format!(
-                "There was an error deleting {}:\n{}",
-                file_name.yellow().bold(),
-                e
-            ),
-        }),
+        Err(e) => Err(CliErr::ErrDeletingMnemonic(file_name.to_string(), e)),
         _ => Ok(Some(format!("{} has been deleted.", file_name.blue()))),
     }
 }

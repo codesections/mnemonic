@@ -14,13 +14,12 @@ use input_state::FsState;
 use list::list;
 use rm::rm;
 use show::show;
-use std::{fs, process};
+use std::fs;
 
 fn main() {
     let cli_args = cli::build_cli().get_matches();
-    let data_dir =
-        ProjectDirs::from("", "", "mn").expect("Should be able to determine project directory");
-    let data_dir = data_dir
+    let data_dir = ProjectDirs::from("", "", "mn")
+        .expect("Should be able to determine project directory")
         .data_local_dir()
         .to_str()
         .expect("Should be able to find local data directory inside project directory")
@@ -62,13 +61,8 @@ fn main() {
     };
 
     match result {
-        Ok(Some(msg)) => println!("{}", msg),
         Ok(None) => (),
-        Err(err) => {
-            eprintln!("{}", err.msg);
-            process::exit(err.code)
-        }
+        Ok(Some(msg)) => println!("{}", msg),
+        Err(cli_err) => cli_err.handle_err(),
     }
 }
-
-// TODO: Create Err enum
