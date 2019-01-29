@@ -26,3 +26,25 @@ pub fn list(fs_state: FsState) -> Result<Option<String>, CliErr> {
     }
     Ok(Some(output_msg))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input_state::FsState;
+
+    #[test]
+    fn it_lists_the_files_in_the_current_dir() {
+        let test_dir = std::fs::read_dir(".");
+        let test_state = FsState {
+            file_exists: false,
+            dir_contents: Some(test_dir.unwrap()),
+            editor: None,
+        };
+
+        match list(test_state) {
+            Err(_) => assert!(false, "No other errors"),
+            Ok(None) => assert!(false),
+            Ok(Some(_msg)) => assert!(true, "It lists the files in the current dir"),
+        }
+    }
+}

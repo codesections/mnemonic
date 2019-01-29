@@ -23,3 +23,25 @@ pub fn add(
         Err(CliErr::MnemonicAlreadyExists(file_name.to_string()))
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::cli;
+//     use crate::input_state::FsState;
+//     #[test]
+//     fn it_returns_mn_not_found_err_when_asked_to_edit_invalid_mn() {
+//         let test_state = FsState {
+//             file_exists: false,
+//             dir_contents: None,
+//             editor: None,
+//         };
+//         let args = cli::build_cli().get_matches_from(vec!["show", "nots"]);
+
+//         match add(&args, "non_existent_dir", test_state) {
+//             Err(CliErr::MnemonicNotFound(_)) => assert!(true, "Should error if file does not exit"),
+//             Err(_) => assert!(false, "No other errors"),
+//             Ok(_) => assert!(false, "Should not return Ok if file does not exist"),
+//         }
+//     }
+// }
