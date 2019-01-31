@@ -18,4 +18,5 @@ directories = "1.0.2"
 colored = "1.7.0"
 open = "1.2.2"
 man = "0.3.0"
+assert_fs = "0.11.3"
 

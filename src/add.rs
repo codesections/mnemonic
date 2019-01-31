@@ -1,47 +1,95 @@
 use crate::edit;
 use crate::err::CliErr;
+use crate::utils;
 use crate::FsState;
-use clap::ArgMatches;
+use crate::MnArgs;
 use colored::*;
 use std::fs;
 
-pub fn add(
-    add_args: &ArgMatches,
-    data_dir: &str,
-    fs_state: FsState,
-) -> Result<Option<String>, CliErr> {
-    let file_name = add_args.value_of("MNEMONIC").expect("Required by clap");
-    let full_path = format!("{}/{}.md", data_dir, file_name);
-    if !fs_state.file_exists {
+pub fn add(args: &MnArgs, fs_state: FsState) -> Result<Option<String>, CliErr> {
+    let file_name = args.mn().as_ref().expect("Required by clap");
+    let full_path = format!(
+        "{}/{}.md",
+        &fs_state.data_dir().as_ref().expect("dir_dir set by caller"),
+        file_name
+    );
+    if !utils::mn_exists(file_name, &fs_state) {
         fs::File::create(&full_path).expect("Can create a file in the project dir");
-        if add_args.is_present("blank") {
+        let fs_state = fs_state.add_mn_file(format!("{}.md", file_name));
+        if *args.blank_flag() {
             Ok(Some(format!("{} created.", file_name.blue())))
         } else {
-            edit(add_args, &data_dir, fs_state)
+            edit(args, fs_state)
         }
     } else {
         Err(CliErr::MnemonicAlreadyExists(file_name.to_string()))
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::cli;
-//     use crate::input_state::FsState;
-//     #[test]
-//     fn it_returns_mn_not_found_err_when_asked_to_edit_invalid_mn() {
-//         let test_state = FsState {
-//             file_exists: false,
-//             dir_contents: None,
-//             editor: None,
-//         };
-//         let args = cli::build_cli().get_matches_from(vec!["show", "nots"]);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input_state::*;
+    use assert_fs::fixture::TempDir;
+    use assert_fs::prelude::*;
 
-//         match add(&args, "non_existent_dir", test_state) {
-//             Err(CliErr::MnemonicNotFound(_)) => assert!(true, "Should error if file does not exit"),
-//             Err(_) => assert!(false, "No other errors"),
-//             Ok(_) => assert!(false, "Should not return Ok if file does not exist"),
-//         }
-//     }
-// }
+    #[test]
+    fn adding_a_mn_that_already_exists_get_mnemonic_already_exists_err() {
+        let args = MnArgs::from_test_data(TestMnArgs::new().mn("already_exists"));
+
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        temp_dir.child("already_exists.md").touch().unwrap();
+        let test_state = FsState::from_test_data(
+            TestFsState::new()
+                .data_dir(&temp_dir_path)
+                .mn_files(vec!["already_exists.md".to_string()]),
+        );
+
+        match add(&args, test_state) {
+            Err(CliErr::MnemonicAlreadyExists(_)) => assert!(
+                true,
+                "Should error if attempting to add a file that already exists"
+            ),
+            Err(_) => assert!(false, "No other errors"),
+            Ok(_) => assert!(false, "Should not return Ok if file already exists"),
+        }
+    }
+
+    #[test]
+    fn adding_a_new_mn_works() {
+        let args = MnArgs::from_test_data(TestMnArgs::new().mn("new"));
+
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        let test_state = FsState::from_test_data(
+            TestFsState::new()
+                .editor("/usr/bin/nvim")
+                .data_dir(&temp_dir_path),
+        );
+
+        match add(&args, test_state) {
+            Err(e) => assert!(false, format!("No errors, such as: {:?}", e)),
+            Ok(None) => assert!(true, "Should return Ok after creating a new file"),
+            Ok(_) => assert!(false, format!("Should not return a success msg")),
+        }
+    }
+
+    #[test]
+    fn adding_a_blank_mn_works() {
+        let args = MnArgs::from_test_data(TestMnArgs::new().mn("new").blank_flag(true));
+
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        let test_state = FsState::from_test_data(
+            TestFsState::new()
+                .data_dir(&temp_dir_path)
+                .editor("/usr/bin/nvim"),
+        );
+
+        match add(&args, test_state) {
+            Err(e) => assert!(false, format!("No errors, such as: {:?}", e)),
+            Ok(msg) => assert_eq!(msg, Some(format!("{} created.", "new".blue()))),
+        }
+    }
+}

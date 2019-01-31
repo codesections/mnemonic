@@ -1,23 +1,28 @@
 use crate::err::CliErr;
 use crate::input_state::FsState;
-use clap::ArgMatches;
+use crate::utils;
+use crate::MnArgs;
 use colored::*;
 use std::{fs, io};
 
-pub fn rm(
-    rm_args: &ArgMatches,
-    data_dir: &str,
-    fs_state: FsState,
-) -> Result<Option<String>, CliErr> {
-    let file_name_arguments = rm_args.values_of("MNEMONIC").expect("required by clap");
+pub fn rm(args: &MnArgs, fs_state: FsState) -> Result<Option<String>, CliErr> {
+    let file_name_arguments = args
+        .mnemonics()
+        .clone()
+        .expect("mnemonics required by clap");
+    let dir_path = fs_state
+        .data_dir()
+        .as_ref()
+        .expect("data_dir set by caller");
     let mut output_msg = String::new();
     for file_name in file_name_arguments {
-        let full_path = format!("{}/{}.md", data_dir, file_name);
-        if !fs_state.file_exists {
+        let full_path = format!("{}/{}.md", dir_path, file_name);
+        if !utils::mn_exists(&file_name, &fs_state) {
             return Err(CliErr::MnemonicNotFound(file_name.to_string()));
         }
-        if rm_args.is_present("force") {
-            let file_deleted_msg = delete_file(full_path, file_name)?;
+        if *args.force_flag() {
+            let file_deleted_msg = delete_file(full_path, &file_name)?;
+            // the list of mn_files in fs_state isn't mutable from here and thus isn't updated
             output_msg.push_str(format!("{}\n", file_deleted_msg.unwrap()).as_str());
         } else {
             println!(
@@ -32,7 +37,7 @@ pub fn rm(
             loop {
                 match &answer[..] {
                     "y\n" | "yes\n" => {
-                        let file_deleted_msg = delete_file(full_path, file_name)?;
+                        let file_deleted_msg = delete_file(full_path, &file_name)?;
                         output_msg.push_str(format!("{}\n", file_deleted_msg.unwrap()).as_str());
                         break;
                     }
@@ -62,22 +67,43 @@ fn delete_file(full_path: String, file_name: &str) -> Result<Option<String>, Cli
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cli;
-    use crate::input_state::FsState;
+    use crate::input_state::MnArgs;
+    use crate::input_state::{FsState, TestFsState, TestMnArgs};
+    use assert_fs::fixture::TempDir;
+    use assert_fs::prelude::*;
 
     #[test]
-    fn it_returns_mn_not_found_err_when_asked_to_rm_invalid_mn() {
-        let test_state = FsState {
-            file_exists: false,
-            dir_contents: None,
-            editor: None,
-        };
-        let args = cli::build_cli().get_matches_from(vec!["show", "nots"]);
+    fn rm_invalid_file() {
+        let test_state = FsState::from_test_data(TestFsState::new().data_dir("invalid"));
+        let args =
+            MnArgs::from_test_data(TestMnArgs::new().mnemonics(vec!["mn that doesn't exist"]));
 
-        match rm(&args, "hi", test_state) {
+        match rm(&args, test_state) {
             Err(CliErr::MnemonicNotFound(_)) => assert!(true, "Should error if file does not exit"),
             Err(_) => assert!(false, "No other errors"),
             Ok(_) => assert!(false, "Should not return Ok if file does not exist"),
+        }
+    }
+
+    #[test]
+    fn rm_force_flag() {
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        temp_dir.child("mn0.md").touch().unwrap();
+
+        let test_state = FsState::from_test_data(
+            TestFsState::new()
+                .data_dir(&temp_dir_path)
+                .mn_files(vec!["mn0.md".to_string()]),
+        );
+
+        let args =
+            MnArgs::from_test_data(TestMnArgs::new().mnemonics(vec!["mn0"]).force_flag(true));
+
+        match rm(&args, test_state) {
+            Ok(None) => assert!(false, "should print a msg"),
+            Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
+            Ok(Some(_)) => assert!(true, "should return Some(msg)"),
         }
     }
 }
