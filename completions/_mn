@@ -21,7 +21,7 @@ _mn() {
 '--help[Prints help information]' \
 '-V[Prints version information]' \
 '--version[Prints version information]' \
-'::MNEMONIC -- the mnemonic to display:_files' \
+':MNEMONIC -- the mnemonic to display:_files' \
 ":: :_mn_commands" \
 "*::: :->mnemonic" \
 && ret=0
