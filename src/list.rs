@@ -40,7 +40,7 @@ mod tests {
     use assert_fs::prelude::*;
 
     #[test]
-    fn it_returns_an_appropriate_msg_when_the_user_has_no_mn() {
+    fn list_zero_mns() {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 
@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn it_returns_an_appropriate_msg_when_the_user_has_one_mn() {
+    fn list_one_mn() {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn it_returns_an_appropriate_msg_when_the_user_has_many_mns() {
+    fn list_multiple_mns() {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 

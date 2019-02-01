@@ -62,7 +62,7 @@ mod tests {
     use assert_fs::prelude::*;
 
     #[test]
-    fn it_returns_mn_not_found_err_when_asked_to_edit_invalid_mn() {
+    fn edit_non_existant_mn() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn that doesn't exist"));
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn it_can_edit_a_mn_with_editor() {
+    fn edit_mn_with_editor() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0"));
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn it_can_edit_a_mn_with_xdg_open() {
+    fn edit_mn_with_xdg_open() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0"));
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn it_can_append_to_a_mn() {
+    fn append_to_a_mn() {
         use std::fs::File;
         use std::io::prelude::*;
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0").push("text to append"));

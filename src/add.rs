@@ -34,7 +34,7 @@ mod tests {
     use assert_fs::prelude::*;
 
     #[test]
-    fn adding_a_mn_that_already_exists_get_mnemonic_already_exists_err() {
+    fn add_mn_that_exitst() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("already_exists"));
 
         let temp_dir = TempDir::new().unwrap();
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn adding_a_new_mn_works() {
+    fn add_a_new_mn_with_editor() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("new"));
 
         let temp_dir = TempDir::new().unwrap();
@@ -76,7 +76,22 @@ mod tests {
     }
 
     #[test]
-    fn adding_a_blank_mn_works() {
+    fn add_a_new_mn_with_xdg_open() {
+        let args = MnArgs::from_test_data(TestMnArgs::new().mn("new"));
+
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        let test_state = FsState::from_test_data(TestFsState::new().data_dir(&temp_dir_path));
+
+        match add(&args, test_state) {
+            Err(e) => assert!(false, format!("No errors, such as: {:?}", e)),
+            Ok(None) => assert!(true, "Should return Ok after creating a new file"),
+            Ok(_) => assert!(false, format!("Should not return a success msg")),
+        }
+    }
+
+    #[test]
+    fn add_a_blank_mn() {
         let args = MnArgs::from_test_data(TestMnArgs::new().mn("new").blank_flag(true));
 
         let temp_dir = TempDir::new().unwrap();

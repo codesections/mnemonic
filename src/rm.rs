@@ -86,6 +86,19 @@ mod tests {
     }
 
     #[test]
+    fn delte_a_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let temp_dir_path = format!("{}", temp_dir.path().display());
+        temp_dir.child("mn0.md").touch().unwrap();
+        let full_path = format!("{}/mn0.md", temp_dir_path);
+
+        match delete_file(full_path, "mn0") {
+            Ok(None) => assert!(false, "should print a msg"),
+            Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
+            Ok(Some(_)) => assert!(true, "should return Some(msg)"),
+        }
+    }
+    #[test]
     fn rm_force_flag() {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
