@@ -1,22 +1,12 @@
 use crate::err::CliErr;
-use crate::input_state::FsState;
+use crate::state::State;
 use colored::*;
 
-pub fn list(fs_state: FsState) -> Result<Option<String>, CliErr> {
+pub fn list(state: State) -> Result<Option<String>, CliErr> {
     let mut output_msg = String::new();
     let mut file_list = vec![];
-    for file in fs_state.dir_contents().expect("dir_contents set by caller") {
-        file_list.push(format!(
-            "  - {}",
-            file.expect("file should exist")
-                .path()
-                .file_stem()
-                .expect("file should have valid stem")
-                .to_str()
-                .expect("file should be able to be converted to a string")
-                .blue()
-                .bold()
-        ));
+    for file in state.filesystem().mnemonic_files() {
+        file_list.push(format!("  - {}", file.as_str().blue().bold()));
     }
 
     match file_list.len() {
@@ -35,7 +25,7 @@ pub fn list(fs_state: FsState) -> Result<Option<String>, CliErr> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_state::*;
+    use crate::state::{test_state::*, *};
     use assert_fs::fixture::TempDir;
     use assert_fs::prelude::*;
 
@@ -44,8 +34,14 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 
-        let test_state = FsState::from_test_data(TestFsState::new().dir_contents(&temp_dir_path));
-        match list(test_state) {
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .directory(temp_dir_path)
+                .build()
+                .unwrap(),
+        )
+        .and_from_filesystem();
+        match list(state) {
             Err(_) => assert!(false, "No other errors"),
             Ok(None) => assert!(false),
             Ok(Some(msg)) => assert_eq!(
@@ -60,11 +56,16 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 
-        let test_state = FsState::from_test_data(TestFsState::new().dir_contents(&temp_dir_path));
-
         temp_dir.child("mn0.md").touch().unwrap();
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .directory(temp_dir_path)
+                .build()
+                .unwrap(),
+        )
+        .and_from_filesystem();
 
-        match list(test_state) {
+        match list(state) {
             Err(_) => assert!(false, "No other errors"),
             Ok(None) => assert!(false),
             Ok(Some(msg)) => assert_eq!(
@@ -82,13 +83,18 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let temp_dir_path = format!("{}", temp_dir.path().display());
 
-        let test_state = FsState::from_test_data(TestFsState::new().dir_contents(&temp_dir_path));
-
         temp_dir.child("mn0.md").touch().unwrap();
         temp_dir.child("mn1.md").touch().unwrap();
         temp_dir.child("mn2.md").touch().unwrap();
 
-        match list(test_state) {
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .directory(temp_dir_path)
+                .build()
+                .unwrap(),
+        )
+        .and_from_filesystem();
+        match list(state) {
             Err(_) => assert!(false, "No other errors"),
             Ok(None) => assert!(false),
             Ok(Some(msg)) => assert_eq!(
