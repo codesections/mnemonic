@@ -65,8 +65,4 @@ syntax = "md"
 
 # The default color-scheme
 theme = "TwoDark"
-
-
-[filesystem]
-
-mnemonic_files = []"#;
+"#;

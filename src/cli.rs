@@ -20,9 +20,17 @@ pub fn build_cli() -> App<'static, 'static> {
                 .about(add.help)
                 .arg(
                     Arg::with_name("blank")
-                        .help("create a blank mnemonic without opening it in your editor")
+                        .help("Create a blank mnemonic without opening it in your editor")
                         .long("--blank")
                         .short("-b"),
+                )
+                .arg(
+                    Arg::with_name("editor")
+                        .help("Create a new mnemonic by opening it with the editor at PATH")
+                        .takes_value(true)
+                        .value_name("PATH")
+                        .long("--editor")
+                        .short("-e"),
                 )
                 .arg(
                     Arg::with_name("MNEMONIC")
@@ -39,6 +47,14 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long(push.long)
                         .short(push.short)
                         .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("editor")
+                        .help("Edit the mnemonic with the editor at PATH")
+                        .takes_value(true)
+                        .value_name("PATH")
+                        .long("--editor")
+                        .short("-e"),
                 )
                 .arg(
                     Arg::with_name("MNEMONIC")
@@ -72,7 +88,9 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long(theme.long)
                         .short(theme.short)
                         .takes_value(true)
-                        .possible_values(&theme.possible_values.expect("Set these ourself")),
+                        .possible_values(
+                            &theme.possible_values.clone().expect("Set these ourself"),
+                        ),
                 )
                 .arg(
                     Arg::with_name("plaintext")
@@ -100,10 +118,28 @@ pub fn build_cli() -> App<'static, 'static> {
                 .required(true),
         )
         .arg(
+            Arg::with_name(theme.name)
+                .help(theme.help)
+                .long(theme.long)
+                .short(theme.short)
+                .takes_value(true)
+                .possible_values(&theme.possible_values.expect("Set these ourself"))
+                .hidden(true),
+        )
+        .arg(
             Arg::with_name("plaintext")
                 .help("Print the mnemonic with no syntax highlighting at all.")
                 .long("--plaintext")
                 .short("-p")
+                .conflicts_with("syntax")
+                .hidden(true),
+        )
+        .arg(
+            Arg::with_name("syntax")
+                .help("The language syntax used for highlighting the output. [Default: md]")
+                .long("--syntax")
+                .short("-s")
+                .takes_value(true)
                 .hidden(true),
         )
 }

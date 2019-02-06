@@ -1,9 +1,11 @@
 mod default_toml_config;
+#[cfg(test)]
 pub mod test_state;
 use clap::ArgMatches;
 use derive_builder::Builder;
 use serde_derive::{Deserialize, Serialize};
 use std::{fs, io::prelude::*};
+#[cfg(test)]
 use test_state::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -43,6 +45,7 @@ impl State {
     }
 
     // Constructors/setters
+    #[cfg(test)]
     pub fn from_test_state(test_state: TestState) -> Self {
         Self {
             mnemonics: test_state.mnemonics,
@@ -57,7 +60,7 @@ impl State {
     }
 
     pub fn from_config_file() -> Self {
-        use default_toml_config::TOML;
+        use default_toml_config;
         use directories::ProjectDirs;
         use std::{fs, io::Read};
         use toml_edit::{value, Document};
@@ -77,14 +80,19 @@ impl State {
             Ok(mut file) => {
                 file.read_to_string(&mut config)
                     .expect("should be able to read open file to string");
-                // FIXME: add error handling here
-                toml::from_str(config.as_str()).unwrap()
+                config.push_str("[filesystem]\nmnemonic_files = []");
+                toml::from_str(&config).unwrap_or_else(|e| {
+                    // TODO: make this a Result? Print in color?
+                    eprintln!("Error processing your config file, {}.\n{}\nPlease ensure it has all required keys and values or restore it to its default state.", config_file, e);
+                    std::process::exit(1);
+                })
             }
             Err(_) => {
                 use std::env;
 
-                config = TOML.to_string();
-                let mut state: State = toml::from_str(config.as_str()).unwrap();
+                config = default_toml_config::TOML.to_string();
+                config.push_str("[filesystem]\nmnemonic_files = []");
+                let mut state: State = toml::from_str(config.as_str()).expect("set in static str");
                 let directory = ProjectDirs::from("", "", "mn")
                     .expect("Should be able to determine project directory")
                     .data_local_dir()
@@ -101,7 +109,9 @@ impl State {
                 state.edit.editor = default_editor.clone();
                 state.add.editor = default_editor.clone();
                 state.directory = directory.clone();
-                let mut state_with_comments = TOML.parse::<Document>().expect("invalid doc");
+                let mut state_with_comments = default_toml_config::TOML
+                    .parse::<Document>()
+                    .expect("invalid doc");
                 state_with_comments["edit"]["editor"] = value(default_editor.clone());
                 state_with_comments["add"]["editor"] = value(default_editor);
                 state_with_comments["directory"] = value(directory);
@@ -136,12 +146,41 @@ impl State {
                     Some(add_args) => add_args.is_present("blank") || self.add.blank,
                     None => self.add.blank,
                 },
-                editor: match clap_args.subcommand_matches("add") {
-                    Some(add_args) => match add_args.value_of("editor") {
+                editor: match (
+                    clap_args.subcommand_matches("add"),
+                    clap_args.subcommand_matches("edit"),
+                ) {
+                    (Some(add_args), _) => match add_args.value_of("editor") {
+                        Some(editor) => editor.to_string(),
+                        None => self.add.editor.clone(),
+                    },
+
+                    (_, Some(edit_args)) => match edit_args.value_of("editor") {
+                        Some(editor) => editor.to_string(),
+                        None => self.add.editor.clone(),
+                    },
+                    (None, None) => self.add.editor.clone(),
+                },
+            },
+            edit: Edit {
+                push: match clap_args.subcommand_matches("edit") {
+                    Some(edit_args) => edit_args.value_of("push").map(|s| s.to_string()),
+                    None => self.edit.push,
+                },
+                editor: match (
+                    clap_args.subcommand_matches("add"),
+                    clap_args.subcommand_matches("edit"),
+                ) {
+                    (Some(add_args), _) => match add_args.value_of("editor") {
                         Some(editor) => editor.to_string(),
                         None => self.add.editor,
                     },
-                    None => self.add.editor,
+
+                    (_, Some(edit_args)) => match edit_args.value_of("editor") {
+                        Some(editor) => editor.to_string(),
+                        None => self.add.editor,
+                    },
+                    (None, None) => self.add.editor,
                 },
             },
             rm: Rm {
@@ -151,23 +190,29 @@ impl State {
                 },
             },
             show: Show {
-                plaintext: match clap_args.subcommand_matches("show") {
-                    Some(show_args) => show_args.is_present("plaintext") || self.show.plaintext,
-                    None => self.show.plaintext,
+                plaintext: match (clap_args.subcommand_matches("show"), &clap_args) {
+                    (Some(show_arg), _) => show_arg.is_present("plaintext") || self.show.plaintext,
+                    (_, clap_args) => clap_args.is_present("plaintext") || self.show.plaintext,
                 },
-                theme: match clap_args.subcommand_matches("show") {
-                    Some(show_args) => match show_args.value_of("theme") {
+                theme: match (clap_args.subcommand_matches("show"), &clap_args) {
+                    (Some(show_args), _) => match show_args.value_of("theme") {
                         Some(theme) => theme.to_string(),
                         None => self.show.theme,
                     },
-                    None => self.show.theme,
+                    (_, clap_args) => match clap_args.value_of("theme") {
+                        Some(theme) => theme.to_string(),
+                        None => self.show.theme,
+                    },
                 },
-                syntax: match clap_args.subcommand_matches("show") {
-                    Some(show_args) => match show_args.value_of("syntax") {
+                syntax: match (clap_args.subcommand_matches("show"), &clap_args) {
+                    (Some(show_args), _) => match show_args.value_of("syntax") {
                         Some(syntax) => syntax.to_string(),
                         None => self.show.syntax,
                     },
-                    None => self.show.syntax,
+                    (_, clap_args) => match clap_args.value_of("syntax") {
+                        Some(syntax) => syntax.to_string(),
+                        None => self.show.syntax,
+                    },
                 },
             },
             ..self
@@ -231,8 +276,14 @@ impl Default for State {
         };
         Self {
             list: List::default(),
-            add: AddBuilder::new().editor(editor.clone()).build().unwrap(),
-            edit: EditBuilder::new().editor(editor).build().unwrap(),
+            add: Add {
+                editor: editor.clone(),
+                blank: false,
+            },
+            edit: Edit {
+                editor: editor.clone(),
+                push: None,
+            },
             show: Show::default(),
             rm: Rm::default(),
             directory,
