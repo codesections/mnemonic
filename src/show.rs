@@ -1,23 +1,19 @@
 use crate::err::CliErr;
-use crate::input_state::FsState;
+use crate::state::State;
 use crate::utils;
-use crate::MnArgs;
 use prettyprint::*;
 use std::{fs, io::Read};
 
-pub fn show(args: &MnArgs, fs_state: FsState) -> Result<Option<String>, CliErr> {
-    let mn = args.mn().as_ref().expect("Required by clap");
-    let dir_path = fs_state
-        .data_dir()
-        .as_ref()
-        .expect("data_dir set by caller");
-    let full_path = format!("{}/{}.md", dir_path, mn);
+pub fn show(state: State) -> Result<Option<String>, CliErr> {
+    let mn = state.mnemonics()[0].clone();
+    let directory = state.directory();
+    let full_path = format!("{}/{}.md", directory, mn);
 
-    if utils::mn_exists(mn, &fs_state) {
-        if *args.plaintext_flag() {
+    if utils::new_mn_exists(&mn, &state) {
+        if *state.show().plaintext() {
             return print_plaintext(&full_path);
         }
-        print_color(&full_path, args)
+        print_color(&full_path, state)
     } else {
         Err(CliErr::MnemonicNotFound(mn.to_string()))
     }
@@ -31,16 +27,12 @@ fn print_plaintext(file_path: &str) -> Result<Option<String>, CliErr> {
     Ok(Some(plaintext))
 }
 
-fn print_color(full_path: &str, args: &MnArgs) -> Result<Option<String>, CliErr> {
+fn print_color(full_path: &str, state: State) -> Result<Option<String>, CliErr> {
     PrettyPrinter::default()
         .header(false)
         .grid(false)
-        .language(args.syntax().clone().unwrap_or_else(|| "md".to_string()))
-        .theme(
-            args.theme()
-                .clone()
-                .unwrap_or_else(|| "TwoDark".to_string()),
-        )
+        .language(state.show().syntax().as_str())
+        .theme(state.show().theme().as_str())
         .line_numbers(false)
         .build()
         .expect("should be able to build a formater")
@@ -52,19 +44,21 @@ fn print_color(full_path: &str, args: &MnArgs) -> Result<Option<String>, CliErr>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_state::MnArgs;
-    use crate::input_state::{FsState, TestFsState, TestMnArgs};
+    use crate::state::test_state::*;
+    use crate::state::*;
     use assert_fs::fixture::TempDir;
     use assert_fs::prelude::*;
 
     #[test]
     fn show_invalid_mn() {
-        let test_state =
-            FsState::from_test_data(TestFsState::new().data_dir("dir that doesn't exist"));
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .build()
+                .unwrap(),
+        );
 
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn that doesn't exist"));
-
-        match show(&args, test_state) {
+        match show(state) {
             Err(CliErr::MnemonicNotFound(_)) => assert!(true, "Should error if file does not exit"),
             Err(_) => assert!(false, "No other errors"),
             Ok(_) => assert!(false, "Should not return Ok if file does not exist"),
@@ -77,14 +71,21 @@ mod tests {
         let temp_dir_path = format!("{}", temp_dir.path().display());
         temp_dir.child("mn0.md").touch().unwrap();
 
-        let test_state = FsState::from_test_data(
-            TestFsState::new()
-                .mn_files(vec!["mn0.md".to_string()])
-                .data_dir(&temp_dir_path),
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .directory(temp_dir_path)
+                .filesystem(
+                    FileSystemBuilder::new()
+                        .mnemonic_files(vec!["mn0".to_string()])
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
         );
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0"));
 
-        match show(&args, test_state) {
+        match show(state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
             Ok(Some(msg)) => assert!(false, format!("Should not return a msg: {}", msg)),
             Ok(None) => assert!(true, "Should return Ok with no msg"),
@@ -97,14 +98,22 @@ mod tests {
         let temp_dir_path = format!("{}", temp_dir.path().display());
         temp_dir.child("mn0.md").write_str("test text").unwrap();
 
-        let test_state = FsState::from_test_data(
-            TestFsState::new()
-                .mn_files(vec!["mn0.md".to_string()])
-                .data_dir(&temp_dir_path),
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .directory(temp_dir_path)
+                .show(ShowBuilder::new().plaintext(true).build().unwrap())
+                .filesystem(
+                    FileSystemBuilder::new()
+                        .mnemonic_files(vec!["mn0".to_string()])
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
         );
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0").plaintext_flag(true));
 
-        match show(&args, test_state) {
+        match show(state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
             Ok(None) => assert!(false, "Should return Ok a no msg"),
             Ok(Some(msg)) => assert_eq!(msg, "test text"),
@@ -118,12 +127,24 @@ mod tests {
         temp_dir.child("mn0.md").touch().unwrap();
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0"));
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .directory(temp_dir_path)
+                .filesystem(
+                    FileSystemBuilder::new()
+                        .mnemonic_files(vec!["mn0".to_string()])
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
+        );
 
-        match print_color(&full_path, &args) {
+        match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
             Ok(None) => assert!(true, "Should return Ok with no msg"),
-            Ok(_) => assert!(false, "Should not return Some(msg)"),
+            Ok(Some(msg)) => assert!(false, "Should not return Some(msg): {}", msg),
         }
     }
 
@@ -134,9 +155,27 @@ mod tests {
         temp_dir.child("mn0.md").touch().unwrap();
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0").syntax("yaml"));
-
-        match print_color(&full_path, &args) {
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .directory(temp_dir_path)
+                .show(
+                    ShowBuilder::new()
+                        .theme("TwoDark")
+                        .syntax("md")
+                        .build()
+                        .unwrap(),
+                )
+                .filesystem(
+                    FileSystemBuilder::new()
+                        .mnemonic_files(vec!["mn0".to_string()])
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
+        );
+        match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
             Ok(None) => assert!(true, "Should return Ok with no msg"),
             Ok(_) => assert!(false, "Should not return Some(msg)"),
@@ -149,9 +188,22 @@ mod tests {
         temp_dir.child("mn0.md").touch().unwrap();
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
-        let args = MnArgs::from_test_data(TestMnArgs::new().mn("mn0").theme("OneHalfDark"));
+        let state = State::from_test_state(
+            TestStateBuilder::new()
+                .mnemonics(vec!["mn0".to_string()])
+                .directory(temp_dir_path)
+                .show(ShowBuilder::new().theme("OneHalfDark").build().unwrap())
+                .filesystem(
+                    FileSystemBuilder::new()
+                        .mnemonic_files(vec!["mn0".to_string()])
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
+        );
 
-        match print_color(&full_path, &args) {
+        match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
             Ok(None) => assert!(true, "Should return Ok with no msg"),
             Ok(_) => assert!(false, "Should not return Some(msg)"),

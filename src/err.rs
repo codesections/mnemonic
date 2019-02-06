@@ -12,8 +12,9 @@ impl CliErr {
         use CliErr::*;
         match self {
             MnemonicNotFound(mnemonic) => eprintln!(
-                "{} not found.  Would you like to add it to Mnemonic?",
-                mnemonic.yellow().bold()
+                "You do not have a mnemonic named {}.\nYou can add it with `mn add {}`",
+                mnemonic.yellow().bold(),
+                mnemonic,
             ),
             ErrDeletingMnemonic(mnemonic, err) => eprintln!(
                 "There was an error deleting {}:\n{}",

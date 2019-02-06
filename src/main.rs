@@ -2,48 +2,34 @@ mod add;
 mod cli;
 mod edit;
 mod err;
-mod input_state;
 mod list;
 mod rm;
 mod show;
+mod state;
 mod utils;
 
 use add::add;
 use edit::edit;
-use input_state::{FsState, MnArgs};
 use list::list;
 use rm::rm;
 use show::show;
+use state::State;
 
 fn main() {
     let cli_args = cli::build_cli().get_matches();
-    let fs_state = FsState::from_filesystem();
 
-    let result = match cli_args.subcommand() {
-        ("rm", Some(args)) => {
-            let args = MnArgs::build_from_clap_args(args);
-            rm(&args, fs_state)
-        }
-        ("add", Some(args)) => {
-            let args = MnArgs::build_from_clap_args(args);
-            add(&args, fs_state)
-        }
-        ("list", Some(_list_args)) => list(fs_state),
-        // TODO: let user edit syntax for mnemonic
-        ("edit", Some(args)) => {
-            let args = MnArgs::build_from_clap_args(args);
-            edit(&args, fs_state)
-        }
-        ("show", Some(args)) => {
-            let args = MnArgs::build_from_clap_args(args);
-            show(&args, fs_state)
-        }
-        _ => {
-            let args = MnArgs::build_from_clap_args(&cli_args);
-            show(&args, fs_state)
-        }
+    let state = State::from_config_file()
+        .and_from_clap_args(cli_args.clone())
+        .and_from_filesystem();
+
+    let result = match cli_args.subcommand_name() {
+        Some("rm") => rm(state),
+        Some("add") => add(state),
+        Some("list") => list(state),
+        Some("edit") => edit(state),
+        Some("show") => show(state),
+        _ => show(state),
     };
-
     match result {
         Ok(None) => (),
         Ok(Some(msg)) => println!("{}", msg),
