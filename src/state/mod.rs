@@ -1,6 +1,7 @@
 mod default_toml_config;
 #[cfg(test)]
 pub mod test_state;
+use crate::err::CliErr;
 use clap::ArgMatches;
 use derive_builder::Builder;
 use serde_derive::{Deserialize, Serialize};
@@ -59,7 +60,7 @@ impl State {
         }
     }
 
-    pub fn from_config_file() -> Self {
+    pub fn from_config_file() -> Result<Self, CliErr> {
         use default_toml_config;
         use directories::ProjectDirs;
         use std::{fs, io::Read};
@@ -81,18 +82,14 @@ impl State {
                 file.read_to_string(&mut config)
                     .expect("should be able to read open file to string");
                 config.push_str("[filesystem]\nmnemonic_files = []");
-                toml::from_str(&config).unwrap_or_else(|e| {
-                    // TODO: make this a Result? Print in color?
-                    eprintln!("Error processing your config file, {}.\n{}\nPlease ensure it has all required keys and values or restore it to its default state.", config_file, e);
-                    std::process::exit(1);
-                })
+                toml::from_str(&config)?
             }
             Err(_) => {
                 use std::env;
 
                 config = default_toml_config::TOML.to_string();
                 config.push_str("[filesystem]\nmnemonic_files = []");
-                let mut state: State = toml::from_str(config.as_str()).expect("set in static str");
+                let mut state: State = toml::from_str(config.as_str())?;
                 let directory = ProjectDirs::from("", "", "mn")
                     .expect("Should be able to determine project directory")
                     .data_local_dir()
@@ -100,9 +97,9 @@ impl State {
                     .expect("Should be able to find local data directory inside project directory")
                     .to_string();
                 let default_editor = if let Some(editor) = env::var_os("VISUAL") {
-                    editor.into_string().expect("can parse $VISUAL")
+                    editor.into_string()?
                 } else if let Some(editor) = env::var_os("EDITOR") {
-                    editor.into_string().expect("Can parse $EDITOR")
+                    editor.into_string()?
                 } else {
                     "nano".to_string()
                 };
@@ -116,22 +113,14 @@ impl State {
                 state_with_comments["add"]["editor"] = value(default_editor);
                 state_with_comments["directory"] = value(directory.clone());
                 fs::create_dir_all(&config_dir).expect("Should be able to create a directory");
-                let mut file = fs::File::create(&config_file).unwrap_or_else(|e|{
-                    // TODO: make this a Result? Print in color?
-                    eprintln!("Error writing your config file, {}.\n{}\nPlease ensure that you have write permissions in {}", config_file, e, config_dir);
-                    std::process::exit(1);
-                });
-                file.write_all(state_with_comments.to_string().as_bytes()).unwrap_or_else(|e|{
-                    // TODO: make this a Result? Print in color?
-                    eprintln!("Error writing your config file, {}.\n{}\nPlease ensure that you have write permissions in {}", config_file, e, config_dir);
-                    std::process::exit(1);
-                });
+                let mut file = fs::File::create(&config_file)?;
+                file.write_all(state_with_comments.to_string().as_bytes())?;
 
                 state
             }
         };
 
-        state
+        Ok(state)
     }
 
     pub fn and_from_clap_args(self, clap_args: ArgMatches) -> Self {

@@ -20,6 +20,10 @@ Register-ArgumentCompleter -Native -CommandName 'mn' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'mn' {
+            [CompletionResult]::new('-t', 't', [CompletionResultType]::ParameterName, 'Sets a color scheme for the displayed mnemonic')
+            [CompletionResult]::new('--theme', 'theme', [CompletionResultType]::ParameterName, 'Sets a color scheme for the displayed mnemonic')
+            [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'The language syntax used for highlighting the output. [Default: md]')
+            [CompletionResult]::new('--syntax', 'syntax', [CompletionResultType]::ParameterName, 'The language syntax used for highlighting the output. [Default: md]')
             [CompletionResult]::new('-p', 'p', [CompletionResultType]::ParameterName, 'Print the mnemonic with no syntax highlighting at all.')
             [CompletionResult]::new('--plaintext', 'plaintext', [CompletionResultType]::ParameterName, 'Print the mnemonic with no syntax highlighting at all.')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Prints help information')
@@ -35,8 +39,10 @@ Register-ArgumentCompleter -Native -CommandName 'mn' -ScriptBlock {
             break
         }
         'mn;add' {
-            [CompletionResult]::new('-b', 'b', [CompletionResultType]::ParameterName, 'create a blank mnemonic without opening it in your editor')
-            [CompletionResult]::new('--blank', 'blank', [CompletionResultType]::ParameterName, 'create a blank mnemonic without opening it in your editor')
+            [CompletionResult]::new('-e', 'e', [CompletionResultType]::ParameterName, 'Create a new mnemonic by opening it with the editor at PATH')
+            [CompletionResult]::new('--editor', 'editor', [CompletionResultType]::ParameterName, 'Create a new mnemonic by opening it with the editor at PATH')
+            [CompletionResult]::new('-b', 'b', [CompletionResultType]::ParameterName, 'Create a blank mnemonic without opening it in your editor')
+            [CompletionResult]::new('--blank', 'blank', [CompletionResultType]::ParameterName, 'Create a blank mnemonic without opening it in your editor')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Prints help information')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Prints help information')
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Prints version information')
@@ -46,6 +52,8 @@ Register-ArgumentCompleter -Native -CommandName 'mn' -ScriptBlock {
         'mn;edit' {
             [CompletionResult]::new('-p', 'p', [CompletionResultType]::ParameterName, 'Pushes a new line to the provided mnemonic')
             [CompletionResult]::new('--push', 'push', [CompletionResultType]::ParameterName, 'Pushes a new line to the provided mnemonic')
+            [CompletionResult]::new('-e', 'e', [CompletionResultType]::ParameterName, 'Edit the mnemonic with the editor at PATH')
+            [CompletionResult]::new('--editor', 'editor', [CompletionResultType]::ParameterName, 'Edit the mnemonic with the editor at PATH')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Prints help information')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Prints help information')
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Prints version information')

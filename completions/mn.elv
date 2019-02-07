@@ -15,6 +15,10 @@ edit:completion:arg-completer[mn] = [@words]{
     }
     completions = [
         &'mn'= {
+            cand -t 'Sets a color scheme for the displayed mnemonic'
+            cand --theme 'Sets a color scheme for the displayed mnemonic'
+            cand -s 'The language syntax used for highlighting the output. [Default: md]'
+            cand --syntax 'The language syntax used for highlighting the output. [Default: md]'
             cand -p 'Print the mnemonic with no syntax highlighting at all.'
             cand --plaintext 'Print the mnemonic with no syntax highlighting at all.'
             cand -h 'Prints help information'
@@ -29,8 +33,10 @@ edit:completion:arg-completer[mn] = [@words]{
             cand help 'Prints this message or the help of the given subcommand(s)'
         }
         &'mn;add'= {
-            cand -b 'create a blank mnemonic without opening it in your editor'
-            cand --blank 'create a blank mnemonic without opening it in your editor'
+            cand -e 'Create a new mnemonic by opening it with the editor at PATH'
+            cand --editor 'Create a new mnemonic by opening it with the editor at PATH'
+            cand -b 'Create a blank mnemonic without opening it in your editor'
+            cand --blank 'Create a blank mnemonic without opening it in your editor'
             cand -h 'Prints help information'
             cand --help 'Prints help information'
             cand -V 'Prints version information'
@@ -39,6 +45,8 @@ edit:completion:arg-completer[mn] = [@words]{
         &'mn;edit'= {
             cand -p 'Pushes a new line to the provided mnemonic'
             cand --push 'Pushes a new line to the provided mnemonic'
+            cand -e 'Edit the mnemonic with the editor at PATH'
+            cand --editor 'Edit the mnemonic with the editor at PATH'
             cand -h 'Prints help information'
             cand --help 'Prints help information'
             cand -V 'Prints version information'
