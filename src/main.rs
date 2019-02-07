@@ -19,6 +19,7 @@ fn main() {
     let cli_args = cli::build_cli().get_matches();
 
     let state = State::from_config_file()
+        .unwrap()
         .and_from_clap_args(cli_args.clone())
         .and_from_filesystem();
 

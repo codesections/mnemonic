@@ -15,8 +15,12 @@ _mn() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'-p[Print the mnemonic with no syntax highlighting at all.]' \
-'--plaintext[Print the mnemonic with no syntax highlighting at all.]' \
+'-t+[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'--theme=[Sets a color scheme for the displayed mnemonic]: :(1337 DarkNeon GitHub Monokai\ Extended Monokai\ Extended\ Bright Monokai\ Extended\ Light Monokai\ Extended\ Origin OneHalfDark OneHalfLight Sublime\ Snazzy TwoDark zenburn)' \
+'-s+[The language syntax used for highlighting the output. \[Default: md\]]' \
+'--syntax=[The language syntax used for highlighting the output. \[Default: md\]]' \
+'(-s --syntax)-p[Print the mnemonic with no syntax highlighting at all.]' \
+'(-s --syntax)--plaintext[Print the mnemonic with no syntax highlighting at all.]' \
 '-h[Prints help information]' \
 '--help[Prints help information]' \
 '-V[Prints version information]' \
@@ -33,8 +37,10 @@ _mn() {
         case $line[2] in
             (add)
 _arguments "${_arguments_options[@]}" \
-'-b[create a blank mnemonic without opening it in your editor]' \
-'--blank[create a blank mnemonic without opening it in your editor]' \
+'-e+[Create a new mnemonic by opening it with the editor at PATH]' \
+'--editor=[Create a new mnemonic by opening it with the editor at PATH]' \
+'-b[Create a blank mnemonic without opening it in your editor]' \
+'--blank[Create a blank mnemonic without opening it in your editor]' \
 '-h[Prints help information]' \
 '--help[Prints help information]' \
 '-V[Prints version information]' \
@@ -46,6 +52,8 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 '-p+[Pushes a new line to the provided mnemonic]' \
 '--push=[Pushes a new line to the provided mnemonic]' \
+'-e+[Edit the mnemonic with the editor at PATH]' \
+'--editor=[Edit the mnemonic with the editor at PATH]' \
 '-h[Prints help information]' \
 '--help[Prints help information]' \
 '-V[Prints version information]' \

@@ -38,13 +38,29 @@ _mn() {
 
     case "${cmd}" in
         mn)
-            opts=" -p -h -V  --plaintext --help --version  <MNEMONIC>  add edit list rm show help"
+            opts=" -p -h -V -t -s  --plaintext --help --version --theme --syntax  <MNEMONIC>  add edit list rm show help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
                 return 0
             fi
             case "${prev}" in
                 
+                --theme)
+                    COMPREPLY=($(compgen -W "1337 DarkNeon GitHub Monokai Extended Monokai Extended Bright Monokai Extended Light Monokai Extended Origin OneHalfDark OneHalfLight Sublime Snazzy TwoDark zenburn" -- ${cur}))
+                    return 0
+                    ;;
+                    -t)
+                    COMPREPLY=($(compgen -W "1337 DarkNeon GitHub Monokai Extended Monokai Extended Bright Monokai Extended Light Monokai Extended Origin OneHalfDark OneHalfLight Sublime Snazzy TwoDark zenburn" -- ${cur}))
+                    return 0
+                    ;;
+                --syntax)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
+                    -s)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -54,13 +70,21 @@ _mn() {
             ;;
         
         mn__add)
-            opts=" -b -h -V  --blank --help --version  <MNEMONIC> "
+            opts=" -b -h -V -e  --blank --help --version --editor  <MNEMONIC> "
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
                 return 0
             fi
             case "${prev}" in
                 
+                --editor)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
+                    -e)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -69,7 +93,7 @@ _mn() {
             return 0
             ;;
         mn__edit)
-            opts=" -h -V -p  --help --version --push  <MNEMONIC> "
+            opts=" -h -V -p -e  --help --version --push --editor  <MNEMONIC> "
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
                 return 0
@@ -81,6 +105,14 @@ _mn() {
                     return 0
                     ;;
                     -p)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
+                --editor)
+                    COMPREPLY=($(compgen -f ${cur}))
+                    return 0
+                    ;;
+                    -e)
                     COMPREPLY=($(compgen -f ${cur}))
                     return 0
                     ;;
