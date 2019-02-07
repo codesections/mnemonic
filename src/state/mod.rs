@@ -114,10 +114,18 @@ impl State {
                     .expect("invalid doc");
                 state_with_comments["edit"]["editor"] = value(default_editor.clone());
                 state_with_comments["add"]["editor"] = value(default_editor);
-                state_with_comments["directory"] = value(directory);
-                let mut file = fs::File::create(&config_file).unwrap();
-                file.write_all(state_with_comments.to_string().as_bytes())
-                    .unwrap();
+                state_with_comments["directory"] = value(directory.clone());
+                fs::create_dir_all(&config_dir).expect("Should be able to create a directory");
+                let mut file = fs::File::create(&config_file).unwrap_or_else(|e|{
+                    // TODO: make this a Result? Print in color?
+                    eprintln!("Error writing your config file, {}.\n{}\nPlease ensure that you have write permissions in {}", config_file, e, config_dir);
+                    std::process::exit(1);
+                });
+                file.write_all(state_with_comments.to_string().as_bytes()).unwrap_or_else(|e|{
+                    // TODO: make this a Result? Print in color?
+                    eprintln!("Error writing your config file, {}.\n{}\nPlease ensure that you have write permissions in {}", config_file, e, config_dir);
+                    std::process::exit(1);
+                });
 
                 state
             }

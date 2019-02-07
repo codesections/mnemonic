@@ -9,6 +9,7 @@ pub fn add(state: State) -> Result<Option<String>, CliErr> {
     let file_name = &state.mnemonics()[0].clone();
     let full_path = format!("{}/{}.md", &state.directory(), file_name);
     if !utils::new_mn_exists(&file_name, &state) {
+        fs::create_dir_all(&state.directory()).expect("Should be able to create a directory");
         fs::File::create(&full_path).expect("Can create a file in the project dir");
         let state = state.with_new_mnemonic_file(file_name.to_string());
         if *state.add().blank() {
