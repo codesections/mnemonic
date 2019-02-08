@@ -88,9 +88,7 @@ pub fn build_cli() -> App<'static, 'static> {
                         .long(theme.long)
                         .short(theme.short)
                         .takes_value(true)
-                        .possible_values(
-                            &theme.possible_values.clone().expect("Set these ourself"),
-                        ),
+                        .possible_values(&theme.possible_values),
                 )
                 .arg(
                     Arg::with_name("plaintext")
@@ -123,7 +121,7 @@ pub fn build_cli() -> App<'static, 'static> {
                 .long(theme.long)
                 .short(theme.short)
                 .takes_value(true)
-                .possible_values(&theme.possible_values.expect("Set these ourself"))
+                .possible_values(&theme.possible_values)
                 .hidden(true),
         )
         .arg(
@@ -157,7 +155,7 @@ pub struct OptValues {
     pub help: &'static str,
     pub value_name: &'static str,
     pub default_value: &'static str,
-    pub possible_values: Option<Vec<&'static str>>,
+    pub possible_values: Vec<&'static str>,
 }
 pub struct HeaderInfo {
     pub name: &'static str,
@@ -232,7 +230,7 @@ impl CliText {
                 help: "Pushes a new line to the provided mnemonic",
                 value_name: "NEW_TEXT",
                 default_value: "",
-                possible_values: None,
+                possible_values: Vec::new(),
             },
             theme: OptValues {
                 name: "theme",
@@ -241,7 +239,7 @@ impl CliText {
                 help: "Sets a color scheme for the displayed mnemonic",
                 value_name: "COLOR_SCHEME",
                 default_value: "",
-                possible_values: Some(vec![
+                possible_values: vec![
                     "1337",
                     "DarkNeon",
                     "GitHub",
@@ -254,7 +252,7 @@ impl CliText {
                     "Sublime Snazzy",
                     "TwoDark",
                     "zenburn",
-                ]),
+                ],
             },
         }
     }

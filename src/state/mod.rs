@@ -67,10 +67,10 @@ impl State {
         use toml_edit::{value, Document};
 
         let config_dir = ProjectDirs::from("", "", "mn")
-            .expect("Should be able to determine project directory")
+            .ok_or_else(|| CliErr::LocateDirs)?
             .config_dir()
             .to_str()
-            .expect("Should be able to locate config file")
+            .ok_or_else(|| CliErr::ParseUnicode("the data directory for your system".to_string()))?
             .to_string();
 
         let config_file = format!("{}/mn_config.toml", config_dir).to_string();
@@ -79,8 +79,7 @@ impl State {
 
         let state: State = match fs::File::open(&config_file) {
             Ok(mut file) => {
-                file.read_to_string(&mut config)
-                    .expect("should be able to read open file to string");
+                file.read_to_string(&mut config)?;
                 config.push_str("[filesystem]\nmnemonic_files = []");
                 toml::from_str(&config)?
             }
@@ -91,28 +90,32 @@ impl State {
                 config.push_str("[filesystem]\nmnemonic_files = []");
                 let mut state: State = toml::from_str(config.as_str())?;
                 let directory = ProjectDirs::from("", "", "mn")
-                    .expect("Should be able to determine project directory")
+                    .ok_or_else(|| CliErr::LocateDirs)?
                     .data_local_dir()
                     .to_str()
-                    .expect("Should be able to find local data directory inside project directory")
+                    .ok_or_else(|| {
+                        CliErr::ParseUnicode("the data directory for your system".to_string())
+                    })?
                     .to_string();
                 let default_editor = if let Some(editor) = env::var_os("VISUAL") {
-                    editor.into_string()?
+                    editor
+                        .into_string()
+                        .map_err(|_| CliErr::ParseUnicode("VISUAL".to_string()))?
                 } else if let Some(editor) = env::var_os("EDITOR") {
-                    editor.into_string()?
+                    editor
+                        .into_string()
+                        .map_err(|_| CliErr::ParseUnicode("EDITOR".to_string()))?
                 } else {
                     "nano".to_string()
                 };
                 state.edit.editor = default_editor.clone();
                 state.add.editor = default_editor.clone();
                 state.directory = directory.clone();
-                let mut state_with_comments = default_toml_config::TOML
-                    .parse::<Document>()
-                    .expect("invalid doc");
+                let mut state_with_comments = default_toml_config::TOML.parse::<Document>()?;
                 state_with_comments["edit"]["editor"] = value(default_editor.clone());
                 state_with_comments["add"]["editor"] = value(default_editor);
                 state_with_comments["directory"] = value(directory.clone());
-                fs::create_dir_all(&config_dir).expect("Should be able to create a directory");
+                fs::create_dir_all(&config_dir)?;
                 let mut file = fs::File::create(&config_file)?;
                 file.write_all(state_with_comments.to_string().as_bytes())?;
 
@@ -216,27 +219,26 @@ impl State {
         }
     }
 
-    pub fn and_from_filesystem(self) -> Self {
-        fs::create_dir_all(&self.directory)
-            .expect("should be able to create the data directory if it does not already exist");
-        let dir_contents =
-            fs::read_dir(&self.directory).expect("Should be able to read the local data directory");
+    pub fn and_from_filesystem(self) -> Result<Self, CliErr> {
+        fs::create_dir_all(&self.directory)?;
+        let dir_contents = fs::read_dir(&self.directory)?;
 
-        let mnemonic_files: Vec<_> = dir_contents
-            .map(|file| {
-                file.expect("should be a valid file")
+        let mut mnemonic_files = Vec::new();
+        for file in dir_contents {
+            mnemonic_files.push(
+                file?
                     .path()
                     .file_stem()
-                    .expect("should have valid stem")
+                    .ok_or_else(|| CliErr::ParseUnicode("mnemonic file".to_string()))?
                     .to_str()
-                    .expect("should not contain invalid chars")
-                    .to_string()
-            })
-            .collect();
-        Self {
+                    .ok_or_else(|| CliErr::ParseUnicode("mnemonic file".to_string()))?
+                    .to_string(),
+            );
+        }
+        Ok(Self {
             filesystem: FileSystem { mnemonic_files },
             ..self
-        }
+        })
     }
 
     pub fn with_new_mnemonic_file(self, filename: String) -> Self {
@@ -250,42 +252,6 @@ impl State {
         Self {
             filesystem: FileSystem { mnemonic_files },
             ..self
-        }
-    }
-}
-
-impl Default for State {
-    fn default() -> Self {
-        use directories::ProjectDirs;
-        use std::env;
-        let directory = ProjectDirs::from("", "", "mn")
-            .expect("Should be able to determine project directory")
-            .data_local_dir()
-            .to_str()
-            .expect("Should be able to find local data directory inside project directory")
-            .to_string();
-        let editor = if let Some(editor) = env::var_os("VISUAL") {
-            editor.into_string().expect("can parse $VISUAL")
-        } else if let Some(editor) = env::var_os("EDITOR") {
-            editor.into_string().expect("Can parse $EDITOR")
-        } else {
-            "nano".to_string()
-        };
-        Self {
-            list: List::default(),
-            add: Add {
-                editor: editor.clone(),
-                blank: false,
-            },
-            edit: Edit {
-                editor: editor.clone(),
-                push: None,
-            },
-            show: Show::default(),
-            rm: Rm::default(),
-            directory,
-            mnemonics: Vec::new(),
-            filesystem: FileSystem::default(),
         }
     }
 }

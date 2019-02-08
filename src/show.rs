@@ -4,7 +4,7 @@ use crate::utils;
 use prettyprint::*;
 use std::{fs, io::Read};
 
-pub fn show(state: State) -> Result<Option<String>, CliErr> {
+pub fn show(state: State) -> Result<String, CliErr> {
     let mn = state.mnemonics()[0].clone();
     let directory = state.directory();
     let full_path = format!("{}/{}.md", directory, mn);
@@ -13,21 +13,21 @@ pub fn show(state: State) -> Result<Option<String>, CliErr> {
         if *state.show().plaintext() {
             return print_plaintext(&full_path);
         }
-        print_color(&full_path, state)
+        print_color(&full_path, state)?;
+        Ok(String::new())
     } else {
         Err(CliErr::MnemonicNotFound(mn.to_string()))
     }
 }
 
-fn print_plaintext(file_path: &str) -> Result<Option<String>, CliErr> {
-    let mut file = fs::File::open(&file_path).expect("should be able to open mnemonic");
+fn print_plaintext(file_path: &str) -> Result<String, CliErr> {
+    let mut file = fs::File::open(&file_path)?;
     let mut plaintext = String::new();
-    file.read_to_string(&mut plaintext)
-        .expect("should be able to read open file to string");
-    Ok(Some(plaintext))
+    file.read_to_string(&mut plaintext)?;
+    Ok(plaintext)
 }
 
-fn print_color(full_path: &str, state: State) -> Result<Option<String>, CliErr> {
+fn print_color(full_path: &str, state: State) -> Result<(), CliErr> {
     PrettyPrinter::default()
         .header(false)
         .grid(false)
@@ -35,10 +35,10 @@ fn print_color(full_path: &str, state: State) -> Result<Option<String>, CliErr> 
         .theme(state.show().theme().as_str())
         .line_numbers(false)
         .build()
-        .expect("should be able to build a formater")
+        .map_err(CliErr::CannotPrettyPrint)?
         .file(full_path)
-        .expect("should be able to print existing file");
-    Ok(None)
+        .map_err(|e| CliErr::CannotPrettyPrint(e.description().to_string()))?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -55,7 +55,7 @@ mod tests {
             TestStateBuilder::new()
                 .mnemonics(vec!["mn0".to_string()])
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match show(state) {
@@ -67,9 +67,9 @@ mod tests {
 
     #[test]
     fn show_no_flags() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("mn0.md").touch().unwrap();
+        temp_dir.child("mn0.md").touch().expect("test");
 
         let state = State::from_test_state(
             TestStateBuilder::new()
@@ -79,52 +79,55 @@ mod tests {
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match show(state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
-            Ok(Some(msg)) => assert!(false, format!("Should not return a msg: {}", msg)),
-            Ok(None) => assert!(true, "Should return Ok with no msg"),
+            Ok(ref msg) if msg == &String::new() => assert!(true, "Should return Ok with no msg"),
+            Ok(msg) => assert!(false, format!("Should not return a msg: {}", msg)),
         }
     }
 
     #[test]
     fn show_plaintext() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("mn0.md").write_str("test text").unwrap();
+        temp_dir
+            .child("mn0.md")
+            .write_str("test text")
+            .expect("test");
 
         let state = State::from_test_state(
             TestStateBuilder::new()
                 .mnemonics(vec!["mn0".to_string()])
                 .directory(temp_dir_path)
-                .show(ShowBuilder::new().plaintext(true).build().unwrap())
+                .show(ShowBuilder::new().plaintext(true).build().expect("test"))
                 .filesystem(
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match show(state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
-            Ok(None) => assert!(false, "Should return Ok a no msg"),
-            Ok(Some(msg)) => assert_eq!(msg, "test text"),
+            Ok(ref msg) if msg == &String::new() => assert!(false, "Should return Ok with a msg"),
+            Ok(msg) => assert_eq!(msg, "test text"),
         }
     }
 
     #[test]
     fn print_color_no_args() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("mn0.md").touch().unwrap();
+        temp_dir.child("mn0.md").touch().expect("test");
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
         let state = State::from_test_state(
@@ -135,24 +138,23 @@ mod tests {
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
-            Ok(None) => assert!(true, "Should return Ok with no msg"),
-            Ok(Some(msg)) => assert!(false, "Should not return Some(msg): {}", msg),
+            Ok(()) => assert!(true, "Should return Ok(())"),
         }
     }
 
     #[test]
     fn print_color_syntax() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("mn0.md").touch().unwrap();
+        temp_dir.child("mn0.md").touch().expect("test");
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
         let state = State::from_test_state(
@@ -164,49 +166,52 @@ mod tests {
                         .theme("TwoDark")
                         .syntax("md")
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .filesystem(
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
         match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
-            Ok(None) => assert!(true, "Should return Ok with no msg"),
-            Ok(_) => assert!(false, "Should not return Some(msg)"),
+            Ok(()) => assert!(true, "Should return Ok with no msg"),
         }
     }
     #[test]
     fn print_color_theme() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("mn0.md").touch().unwrap();
+        temp_dir.child("mn0.md").touch().expect("test");
 
         let full_path = format!("{}/mn0.md", temp_dir_path);
         let state = State::from_test_state(
             TestStateBuilder::new()
                 .mnemonics(vec!["mn0".to_string()])
                 .directory(temp_dir_path)
-                .show(ShowBuilder::new().theme("OneHalfDark").build().unwrap())
+                .show(
+                    ShowBuilder::new()
+                        .theme("OneHalfDark")
+                        .build()
+                        .expect("test"),
+                )
                 .filesystem(
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match print_color(&full_path, state) {
             Err(e) => assert!(false, format!("Should not have error: {:#?}", e)),
-            Ok(None) => assert!(true, "Should return Ok with no msg"),
-            Ok(_) => assert!(false, "Should not return Some(msg)"),
+            Ok(()) => assert!(true, "Should return Ok with no msg"),
         }
     }
 }
