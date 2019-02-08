@@ -12,7 +12,7 @@ authors = ["Daniel Sockwell <daniel@codesections.com>"]
 edition = "2018"
 
 [dependencies]
-prettyprint = "0.3.0"
+prettyprint = "0.4.1"
 clap = "2.32.0"
 directories = "1.0.2"
 colored = "1.7.0"

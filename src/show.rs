@@ -11,16 +11,17 @@ pub fn show(state: State) -> Result<String, CliErr> {
 
     if utils::new_mn_exists(&mn, &state) {
         if *state.show().plaintext() {
-            return print_plaintext(&full_path);
+            get_plaintext(&full_path)
+        } else {
+            print_color(&full_path, state)?;
+            Ok(String::new())
         }
-        print_color(&full_path, state)?;
-        Ok(String::new())
     } else {
         Err(CliErr::MnemonicNotFound(mn.to_string()))
     }
 }
 
-fn print_plaintext(file_path: &str) -> Result<String, CliErr> {
+fn get_plaintext(file_path: &str) -> Result<String, CliErr> {
     let mut file = fs::File::open(&file_path)?;
     let mut plaintext = String::new();
     file.read_to_string(&mut plaintext)?;
@@ -28,6 +29,8 @@ fn print_plaintext(file_path: &str) -> Result<String, CliErr> {
 }
 
 fn print_color(full_path: &str, state: State) -> Result<(), CliErr> {
+    let mut plaintext = get_plaintext(full_path)?;
+    plaintext.pop();
     PrettyPrinter::default()
         .header(false)
         .grid(false)
@@ -36,7 +39,7 @@ fn print_color(full_path: &str, state: State) -> Result<(), CliErr> {
         .line_numbers(false)
         .build()
         .map_err(CliErr::CannotPrettyPrint)?
-        .file(full_path)
+        .string(plaintext)
         .map_err(|e| CliErr::CannotPrettyPrint(e.description().to_string()))?;
     Ok(())
 }
