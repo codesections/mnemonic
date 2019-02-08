@@ -4,8 +4,13 @@ use std::fs::File;
 use std::io::prelude::*;
 
 include!("../cli.rs");
+include!("../err.rs");
 
 fn main() {
+    run().unwrap_or_else(|e| e.handle_err())
+}
+
+fn run() -> Result<(), CliErr> {
     let mut app = build_cli();
     for shell in [
         Shell::Bash,
@@ -48,7 +53,7 @@ fn main() {
                     &format!(
                         "{} \n.nf\n.B     Possible values: \n    {}\n.fi\nIt is currently not possible to customize the theme beyond these presets, but it is an issue under consideration.",
                         theme.help,
-                        theme.possible_values.unwrap().join("\n    ")
+                        theme.possible_values.join("\n    ")
                 )
         ))
         .custom(
@@ -82,8 +87,9 @@ fn main() {
         );
     }
     let msg = msg.render();
-    let mut file =
-        File::create("./docs/mn.1").expect("Should be able to open file in project directory");
+    let mut file = File::create("./docs/mn.1")
+        .map_err(|e| CliErr::CannotGenerateManPage("./docs/mn.1".to_string(), e))?;
     file.write_all(msg.as_bytes())
-        .expect("Should be able to write to file in project directory");
+        .map_err(|e| CliErr::CannotGenerateManPage("./docs/mn.1".to_string(), e))?;
+    Ok(())
 }

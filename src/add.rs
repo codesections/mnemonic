@@ -5,15 +5,15 @@ use crate::utils;
 use colored::*;
 use std::fs;
 
-pub fn add(state: State) -> Result<Option<String>, CliErr> {
+pub fn add(state: State) -> Result<String, CliErr> {
     let file_name = &state.mnemonics()[0].clone();
     let full_path = format!("{}/{}.md", &state.directory(), file_name);
     if !utils::new_mn_exists(&file_name, &state) {
         fs::create_dir_all(&state.directory())?;
-        fs::File::create(&full_path).expect("Can create a file in the project dir");
+        fs::File::create(&full_path)?;
         let state = state.with_new_mnemonic_file(file_name.to_string());
         if *state.add().blank() {
-            Ok(Some(format!("{} created.", file_name.blue())))
+            Ok(format!("{} created.", file_name.blue()))
         } else {
             edit(state)
         }
@@ -31,9 +31,9 @@ mod tests {
 
     #[test]
     fn add_mn_that_exitst() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
-        temp_dir.child("already_exists.md").touch().unwrap();
+        temp_dir.child("already_exists.md").touch().expect("test");
         let state = State::from_test_state(
             TestStateBuilder::new()
                 .directory(temp_dir_path)
@@ -43,16 +43,16 @@ mod tests {
                         .blank(true)
                         .editor("nvim")
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .filesystem(
                     FileSystemBuilder::new()
                         .mnemonic_files(vec!["mn0".to_string()])
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match add(state) {
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn add_a_new_mn_with_editor() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
         let state = State::from_test_state(
             TestStateBuilder::new()
@@ -78,10 +78,10 @@ mod tests {
                         .blank(true)
                         .editor("nvim")
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match add(state) {
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn add_a_new_mn_with_xdg_open() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
         let state = State::from_test_state(
             TestStateBuilder::new()
@@ -103,10 +103,10 @@ mod tests {
                         .blank(true)
                         .editor("foo")
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match add(state) {
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn add_a_blank_mn() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("test");
         let temp_dir_path = format!("{}", temp_dir.path().display());
         let state = State::from_test_state(
             TestStateBuilder::new()
@@ -128,15 +128,15 @@ mod tests {
                         .blank(true)
                         .editor("nvim")
                         .build()
-                        .unwrap(),
+                        .expect("test"),
                 )
                 .build()
-                .unwrap(),
+                .expect("test"),
         );
 
         match add(state) {
             Err(e) => assert!(false, format!("No errors, such as: {:?}", e)),
-            Ok(msg) => assert_eq!(msg, Some(format!("{} created.", "mn0".blue()))),
+            Ok(msg) => assert_eq!(msg, format!("{} created.", "mn0".blue())),
         }
     }
 }
