@@ -1,0 +1,38 @@
+ding
+## Commands to remember
+`sudo ip link set wlp59s0 down`                #Disable wifi
+`wifi-on`                                      #Select wifi network
+`hyperfine`                                    #Benchmark
+`scrot`                                        #Screenshots
+`sk`                                           #skim (fuzzy-find)
+`fd`                                           #Find files
+`rg`                                           #Full-text search
+`tokei`                                        #Code word count
+`ssh-save`                                     #Cache ssh keys
+`ssh pi lp < <FILENAME>`                       #Print via ssh
+`guetzli`                                      #jpg compression
+`pulseaudio-ctl`                               #Volume control
+`python -m http.server`                        #Dev server
+`xrandr --output HDMI2 --auto --above eDP1`    #Add 2nd monitor
+`ps_mem`                                       #RAM by program
+
+`history 1 | cat | awk '{CMD[$2]++;count++;}END { for (a in CMD)print CMD[a] " " CMD[a]/count*100 "% " a; }' | grep -v "./" | column -c3 -s " " -t | sort -nr | nl | head -n10`
+  # Most frequently used shell commands
+
+## Tmux: commands
+`ls`                                   #list sessions by number
+`new-session -t <SESSION_NUMBER>`      #attach session to window
+
+## USB mount procedure
+`sudo fdisk -l`           #run before/after plugging in to find
+                           node/partition
+`blkid`                   #similar (more powerful?)
+`sudo mount <NODE> <DIR>` #node from above, e.g. `/dev/sda`
+`sudo umount <DIR>`       #when done
+
+## Config/important files
+/etc/netctl/              #Wifi profiles with passwords
+~/.ssh/config             #Config file with ip addresses
+
+## Misc
+ - blood pressure: 132/80 (09-05-2018)
